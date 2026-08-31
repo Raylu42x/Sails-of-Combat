@@ -109,7 +109,7 @@ window.addEventListener('keydown', ev => {
     case 'ArrowRight': game.setOrder('helm', String(Math.min(ctx.you.turnMax, orders.helm + 1))); break;
     case 'ArrowUp':    game.setOrder('sails', orders.sails === 'takein' ? 'battle' : 'full'); break;
     case 'ArrowDown':  game.setOrder('sails', orders.sails === 'full' ? 'battle' : 'takein'); break;
-    case ' ': case 'Enter': sfx.wake(); game.execute(); break;
+    case ' ': case 'Enter': if (!execBtn.disabled) { sfx.wake(); game.execute(); } break;
     case 'l': case 'L': if (!ctx.busy) banner_showPicker(); break;
     case 'm': case 'M': sfx.toggleMute(); paintMute(); break;
     default:

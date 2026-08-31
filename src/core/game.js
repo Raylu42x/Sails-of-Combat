@@ -15,7 +15,7 @@ import { scenarioById } from '../data/scenarios.js';
 // events for the UI and calls a `view` adapter for anything that takes time.
 export function createGame(view) {
   const bus = createEmitter();
-  const orders = { helm: 0, sails: 'battle', shot: 'round', grapple: 'no', melee: 'press', cable: 'stand' };
+  const orders = { helm: 0, helmSet: true, sails: 'battle', shot: 'round', grapple: 'no', melee: 'press', cable: 'stand' };
   const log = (msg, cls) => bus.emit('log', { msg, cls });
 
   let ctx = null;
@@ -43,6 +43,7 @@ export function createGame(view) {
   const state = () => ctx;
   const setOrder = (key, value) => {
     orders[key] = key === 'helm' ? parseInt(value, 10) : value;
+    if (key === 'helm') orders.helmSet = true;
     bus.emit('change', ctx);
   };
   const getOrders = () => orders;
@@ -127,6 +128,7 @@ export function createGame(view) {
       if (checkStrike(s, ctx)) { log(s.name + ' strikes her colours!', 'big'); bus.emit('struck', s); }
     }
     const shift = maybeShift(ctx.wind, ctx.turn);
+    ctx.windShifted = !!shift;
     if (shift) {
       ctx.wind.from = (ctx.wind.from + shift + 6) % 6;
       log('The wind ' + (shift === 1 ? 'veers' : 'backs') + ' — now from ' + ['N','NE','SE','S','SW','NW'][ctx.wind.from] + '.', 'big');
@@ -213,6 +215,11 @@ export function createGame(view) {
     }
 
     endOfTurn();
+    // A new turn starts with a fresh helm. The default is to stay on course —
+    // and when the wind has shifted there is no default at all: the UI holds
+    // Make It So until the captain gives her a course.
+    orders.helm = 0;
+    orders.helmSet = false;
     await view.pause(400);
     const verdict = evaluate(ctx);
     bus.emit('change', ctx);
