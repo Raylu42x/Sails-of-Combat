@@ -15,3 +15,9 @@ One line per agent/human task. Check here before picking a worktree name.
   (worktree: ../Sails-of-Combat-core-modular-split, branch agent/core-modular-split)
   Open: harbour assault (shore batteries, booms, fire ships, tide window) is
   the next big piece; docs/IDEAS.md holds the rest.
+- [design-research-docs] DONE added the research library behind the original
+  prototype: docs/RESEARCH-HISTORY.md (period sources, with design hooks),
+  docs/RESEARCH-GAMES.md (what prior naval games got right and wrong), and
+  docs/CAMPAIGN-DESIGN.md (a worked proposal for roadmap items 9 and 12:
+  three layers, prize economy, officers, morale, the marque line).
+  (branch agent/design-research-docs — Bryan's side)
