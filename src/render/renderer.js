@@ -16,13 +16,17 @@ export function createRenderer(canvas, box, game) {
 
   const colorFor = s => s.isYou ? C('--brass') : s.side === 'friendly' ? C('--ink') : C('--signal');
 
+  // A hidden tab gets no animation frames, so fall back to a timer — otherwise
+  // a turn started and then backgrounded would never finish.
+  const schedule = fn => (document.hidden ? setTimeout(fn, 16) : requestAnimationFrame(fn));
+
   function tween(ms, fn) {
     return new Promise(res => {
       const t0 = now();
       (function stepFrame() {
         const k = Math.min(1, (now() - t0) / ms);
         fn(k); draw();
-        if (k < 1) requestAnimationFrame(stepFrame); else res();
+        if (k < 1) schedule(stepFrame); else res();
       })();
     });
   }

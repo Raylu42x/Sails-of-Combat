@@ -72,3 +72,6 @@ game.start(banner.pending.id);
 renderer.resize();
 refresh();
 banner.showBriefing(banner.pending);
+
+// Debug handle: `__soc.game.state()` in the console while testing.
+window.__soc = { game, renderer };

@@ -10,7 +10,7 @@ export const SHOT = {
   double: { name: 'double', range: 1, reload: 2 },
 };
 
-export const MOUNT_LABEL = { port: 'port', stbd: 'starboard', bow: 'bow chaser', stern: 'stern chaser' };
+export const MOUNT_LABEL = { port: 'port battery', stbd: 'starboard battery', bow: 'bow chaser', stern: 'stern chaser' };
 
 // Which mount, if any, bears on a target — and whether it is loaded.
 export function bearingMount(s, t) {

@@ -1,0 +1,94 @@
+# Architecture
+
+## The one rule
+
+`src/core/` contains the rules and nothing else. No `document`, no `window`, no
+`canvas`. Everything the core wants to say, it emits; everything it wants drawn,
+it asks the `view` adapter for. That is what lets `tests/smoke.mjs` play whole
+scenarios in Node with a four-line stub view, and it is the constraint to
+protect when adding features.
+
+## Flow of a turn
+
+```
+  UI button ──► game.execute()
+                   │
+                   ├─ aiOrders() for every non-player ship        (core/ai.js)
+                   ├─ recenter the chart if the map scrolls
+                   ├─ applyHelm() for everyone                    (core/ship.js)
+                   ├─ moveShips() — simultaneous                  (core/movement.js)
+                   │     └─ await view.animateMoves(...)          (render/renderer.js)
+                   ├─ tryGrapple()                                (core/combat.js)
+                   ├─ fireAll() per ship, one result per mount    (core/combat.js)
+                   │     └─ await view.animateShot(result, apply)
+                   ├─ endOfTurn() — repairs, reloads, strikes, wind shift
+                   └─ evaluate() — a verdict, or null             (core/objectives.js)
+                          │
+                          └─ emit 'finished' ──► banner
+```
+
+Events the core emits, all consumed in `src/main.js`:
+
+| Event | Payload | UI reaction |
+| --- | --- | --- |
+| `log` | `{ msg, cls }` | append a line to the captain's log |
+| `reset` | `ctx` | clear the log, rebuild ship cards, resize the chart |
+| `change` | `ctx` | refresh HUD, orders and chart |
+| `busy` | `bool` | disable **Make it so** during the animation |
+| `finished` | verdict | show the end-of-action overlay |
+
+## The context object
+
+`game.state()` returns the whole world:
+
+```js
+{ scenario, map, wind, board, ships, you, turn, over, busy }
+```
+
+`ships` is a flat list. There is no "player ship and enemy ship" any more —
+`side` (`friendly` / `hostile`) decides who shoots whom, and `role`
+(`player` / `enemy` / `quarry` / `ward`) is what objectives look at. Adding a
+third ship to a scenario needs no engine change; the HUD builds its cards from
+this list.
+
+## Coordinates
+
+Flat-top hexes in axial `(q, r)`, drawn as odd-q offset. `core/hex.js` owns all
+of it and is pure — `unitPos()` gives a layout position at unit scale, and
+`render/layout.js` multiplies by the current hex size. That separation is why
+bearings and sight lines can be computed in Node with no canvas.
+
+Sight lines use a cube-coordinate line walk (`hex.line`). `board.sightBlocked()`
+returns true if any hex strictly between two ships is tall land; the same test
+gates gunfire, the AI's plans, the range readout and whether an enemy is drawn
+at all.
+
+## Gun mounts
+
+A mount is `{ arcs, power, reload, chaser }` on the ship class. `fireAll()`
+walks every mount that is loaded, finds the nearest enemy inside its arc, in
+range and in sight, and resolves one shot per mount. Broadsides and chasers go
+through the identical path — a chaser is just a mount with `power: 0.5` whose
+arc is `[0]` or `[3]`. Reload counters live per mount in `ship.guns`.
+
+## Randomness
+
+Everything random goes through `core/rng.js`. `setSeed(n)` swaps in a
+deterministic generator, which is what makes the smoke test reproducible. Never
+call `Math.random()` inside `core/`.
+
+## Rendering
+
+`render/layout.js` fits the chart to its box and knows the hex size; it is the
+only place that reads `clientWidth`. `render/renderer.js` draws and owns the
+transient effects (tracers, flashes, floaters, shake, camera pan) plus the
+last-known-position memory for ships hidden behind land. Animations resolve
+through promises the core awaits, and fall back to a timer when the tab is
+hidden so a backgrounded turn still finishes.
+
+## Styling
+
+Three stylesheets: tokens and resets (`base.css`), the responsive shell
+(`layout.css`), and the widgets (`components.css`). The layout is one column on
+phones and a chart-plus-panel grid from 720px up; the canvas is sized in JS from
+its box, so it follows whatever the CSS decides.
