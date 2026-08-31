@@ -10,7 +10,8 @@ const css = getComputedStyle(document.documentElement);
 const C = n => css.getPropertyValue(n).trim();
 const now = () => performance.now();
 
-export function createRenderer(canvas, box, game) {
+export function createRenderer(canvas, box, game, layers) {
+  const layerOn = id => !layers || layers.get(id);
   const cx = canvas.getContext('2d');
   const L = createLayout(canvas, box);
   const fx = { shipPos: {}, tracer: null, flashes: [], floaters: [], shake: 0, muzzle: null, pan: { x: 0, y: 0 } };
@@ -219,9 +220,11 @@ export function createRenderer(canvas, box, game) {
     const f = simFacing(you, orders.helm);
     const inIrons = attOf(f, ctx.wind.from) === 0;
     const path = inIrons ? [] : pathOf(you, ctx, { facing: f, sails: orders.sails, inIrons });
-    cx.fillStyle = 'rgba(217,164,65,0.16)';
-    for (const c of path) { hexPath(L.px(c.q, c.r)); cx.fill(); }
-    drawArcs(ctx, path.length ? path[path.length - 1] : you, f);
+    if (layerOn('track')) {
+      cx.fillStyle = 'rgba(217,164,65,0.16)';
+      for (const c of path) { hexPath(L.px(c.q, c.r)); cx.fill(); }
+    }
+    if (layerOn('arcs')) drawArcs(ctx, path.length ? path[path.length - 1] : you, f);
   }
 
   // Where the guns will bear from where this turn's orders leave her: only the
@@ -297,7 +300,7 @@ export function createRenderer(canvas, box, game) {
 
     cx.strokeStyle = C('--chart-dim'); cx.lineWidth = 1;
     for (const c of ctx.board.cells()) { hexPath(L.px(c.q, c.r)); cx.stroke(); }
-    drawSoundings(ctx);
+    if (layerOn('depth')) drawSoundings(ctx);
     drawTerrain(ctx);
 
     const idle = !ctx.over && !ctx.busy && !ctx.you.grappledTo && !ctx.you.struck;
@@ -307,7 +310,7 @@ export function createRenderer(canvas, box, game) {
     const nearestVisible = hostiles
       .filter(s => game.visibleTo(ctx.you, s))
       .sort((a, b) => dist(ctx.you, a) - dist(ctx.you, b))[0];
-    if (idle && nearestVisible) drawRangeLine(ctx, nearestVisible);
+    if (idle && nearestVisible && layerOn('range')) drawRangeLine(ctx, nearestVisible);
 
     for (const s of ctx.ships) {
       if (s.grappledTo && s.isYou) {
