@@ -102,4 +102,5 @@ the rules throw or a fight never reaches a verdict.
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the pieces fit together
 - [docs/ROADMAP.md](docs/ROADMAP.md) — what to build next, and why
+- [docs/IDEAS.md](docs/IDEAS.md) — the unfiltered idea bank behind the roadmap
 - [docs/decisions/](docs/decisions/) — decision records

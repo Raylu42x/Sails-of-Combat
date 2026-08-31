@@ -1,5 +1,8 @@
 # Roadmap
 
+The ordered plan. The unfiltered pile it is picked from lives in
+[IDEAS.md](IDEAS.md).
+
 Where the game could go next, roughly in the order that gets the most game for
 the least work. Nothing here is committed to — it is a menu, and each item says
 what it touches so the cost is visible before anyone starts.
@@ -78,3 +81,23 @@ what it touches so the cost is visible before anyone starts.
     summary of positions and bearings, focus-visible order buttons (already
     there) and a reduced-motion path that skips animation (`base.css` has the
     media query; the renderer should honour it too).
+
+
+## Requested, not yet scheduled
+
+Raised 2026-08-30, written up in [IDEAS.md](IDEAS.md) with the files each would
+touch. Not started.
+
+- Sound effects, driven off the events the renderer already listens to.
+- Break off a level in progress, and reach the level picker from Restart.
+- Crew loss that bites before a ship strikes — reloads, sail handling, tacking.
+  (Rigging damage already slows a ship; that one is done and just needs saying
+  in the HUD.)
+- More weapon types: long guns, carronades, swivels, limited magazines.
+- Anchoring — a turn to weigh, and no anchoring in deep water. Needs depth on
+  the chart, which shoals and grounding would then share.
+- Ammunition chosen when a battery is loaded, not when it fires, so you cannot
+  switch types on a loaded gun.
+- Boarding as a real crew-against-crew fight rather than one roll a turn.
+- **Future:** harbour assault — shore batteries, forts with fixed arcs, booms,
+  fire ships, and a tide window to get back out.
