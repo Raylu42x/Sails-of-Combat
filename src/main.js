@@ -77,10 +77,13 @@ paintMute();
 // Audio cannot start until the user has touched the page.
 window.addEventListener('pointerdown', () => sfx.wake(), { once: true });
 
-let resizeTimer = null;
+// Setting canvas.width clears the bitmap, so redraw in the same frame as the
+// resize — a debounce here leaves the chart blank while the window settles.
+let resizePending = false;
 const onResize = () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => { renderer.resize(); refresh(); }, 60);
+  if (resizePending) return;
+  resizePending = true;
+  requestAnimationFrame(() => { resizePending = false; renderer.resize(); refresh(); });
 };
 window.addEventListener('resize', onResize);
 window.addEventListener('orientationchange', onResize);

@@ -103,6 +103,29 @@ export function createRenderer(canvas, box, game) {
     cx.closePath();
   }
 
+  function drawSoundings(ctx) {
+    for (const cell of ctx.map.water || []) {
+      const p = L.px(cell.q, cell.r);
+      if (cell.depth === 'shoal') {
+        // Broken water over the bank.
+        cx.strokeStyle = C('--shoal'); cx.lineWidth = 1;
+        for (let i = -1; i <= 1; i++) {
+          const y = p.y + i * L.S * 0.32;
+          cx.beginPath();
+          for (let k = -3; k <= 3; k++) {
+            const x = p.x + k * L.S * 0.14;
+            k === -3 ? cx.moveTo(x, y) : cx.lineTo(x, y + (k % 2 ? L.S * 0.06 : -L.S * 0.06));
+          }
+          cx.stroke();
+        }
+      } else if (cell.depth === 'anchorage') {
+        hexPath(p, 0.96);
+        cx.fillStyle = C('--anchorage');
+        cx.fill();
+      }
+    }
+  }
+
   function drawTerrain(ctx) {
     for (const cell of ctx.map.islands || []) {
       const p = L.px(cell.q, cell.r);
@@ -164,7 +187,23 @@ export function createRenderer(canvas, box, game) {
     }
     cx.globalAlpha = 1;
     cx.restore();
-    const tag = s.struck ? 'STRUCK' : s.inIrons ? 'IN IRONS' : null;
+    // Ground tackle, drawn where the cable would be: down from her bows.
+    if (s.anchor !== 'up' || s.grounded) {
+      cx.save();
+      cx.strokeStyle = s.grounded ? C('--signal') : C('--flash');
+      cx.lineWidth = 1.5;
+      cx.setLineDash([3, 2]);
+      cx.beginPath();
+      cx.moveTo(p.x, p.y);
+      cx.lineTo(p.x + L.S * 0.5, p.y + L.S * 0.5);
+      cx.stroke();
+      cx.setLineDash([]);
+      cx.beginPath();
+      cx.arc(p.x + L.S * 0.55, p.y + L.S * 0.55, L.S * 0.1, 0, Math.PI * 2);
+      cx.stroke();
+      cx.restore();
+    }
+    const tag = s.struck ? 'STRUCK' : s.grounded ? 'AGROUND' : s.inIrons ? 'IN IRONS' : null;
     if (tag) {
       cx.fillStyle = C('--flash');
       cx.font = '700 10px "Barlow Condensed", sans-serif';
@@ -232,6 +271,7 @@ export function createRenderer(canvas, box, game) {
 
     cx.strokeStyle = C('--chart-dim'); cx.lineWidth = 1;
     for (const c of ctx.board.cells()) { hexPath(L.px(c.q, c.r)); cx.stroke(); }
+    drawSoundings(ctx);
     drawTerrain(ctx);
 
     const idle = !ctx.over && !ctx.busy && !ctx.you.grappledTo && !ctx.you.struck;

@@ -1,6 +1,7 @@
 import { DIRS, same } from './hex.js';
 import { attOf } from './wind.js';
-import { speedOf } from './ship.js';
+import { chance } from './rng.js';
+import { madeFast, speedOf } from './ship.js';
 
 // The track a ship would sail this turn, stopping at land, at the chart's edge,
 // or alongside anything already in the way.
@@ -32,6 +33,7 @@ export function moveShips(ctx, log) {
   for (const s of ships) paths[s.uid] = [];
   for (const s of ships) {
     if (s.struck || s.grappledTo) continue;
+    if (madeFast(s)) continue; // riding at anchor, weighing, or aground
     const others = ships.filter(o => o !== s && !o.struck);
     if (s.inIrons || s.rigging <= 0) {
       const nxt = board.driftTo(s, wind.from);
@@ -41,7 +43,19 @@ export function moveShips(ctx, log) {
       if (s.inIrons) log(s.name + ' hangs in irons, drifting to leeward.', s.isYou ? 'you' : 'foe');
       continue;
     }
-    const path = pathOf(s, ctx);
+    let path = pathOf(s, ctx);
+    // Crossing a shoal with way on her risks touching. Creeping over is safer.
+    for (let i = 0; i < path.length; i++) {
+      const c = path[i];
+      if (!board.isShoal(c.q, c.r)) continue;
+      const fast = path.length - i > 1 || s.sails === 'full';
+      if (chance(fast ? 0.4 : 0.12)) {
+        s.grounded = true;
+        path = path.slice(0, i + 1);
+        log(s.name + ' strikes the shoal and brings up hard aground!', 'big');
+        break;
+      }
+    }
     if (path.length) {
       const end = path[path.length - 1];
       paths[s.uid] = path;

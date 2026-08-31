@@ -2,7 +2,7 @@ import { createEmitter } from './events.js';
 import { dist, unitPos } from './hex.js';
 import { setSeed, chance } from './rng.js';
 import { createBoard } from './board.js';
-import { applyHelm, createShip, crewFrac, mountsOf } from './ship.js';
+import { applyHelm, createShip, crewFrac, madeFast, mountsOf } from './ship.js';
 import { attOf, maybeShift, windLabel } from './wind.js';
 import { moveShips } from './movement.js';
 import { applyFireResult, fireAll, meleeRound, tryGrapple } from './combat.js';
@@ -15,7 +15,7 @@ import { scenarioById } from '../data/scenarios.js';
 // events for the UI and calls a `view` adapter for anything that takes time.
 export function createGame(view) {
   const bus = createEmitter();
-  const orders = { helm: 0, sails: 'battle', shot: 'round', grapple: 'no', melee: 'press' };
+  const orders = { helm: 0, sails: 'battle', shot: 'round', grapple: 'no', melee: 'press', cable: 'stand' };
   const log = (msg, cls) => bus.emit('log', { msg, cls });
 
   let ctx = null;
@@ -31,7 +31,7 @@ export function createGame(view) {
       turn: 1, over: false, busy: false, log,
       you: ships.find(s => s.isYou),
     };
-    Object.assign(orders, { helm: 0, sails: 'battle', shot: 'round', grapple: 'no', melee: 'press' });
+    Object.assign(orders, { helm: 0, sails: 'battle', shot: 'round', grapple: 'no', melee: 'press', cable: 'stand' });
     bus.emit('reset', ctx);
     log(scenario.name + ' — ' + map.name + '. ' + windLabel(wind) + '.', 'turnhead');
     log('Set your orders, Captain, then MAKE IT SO.');
@@ -67,6 +67,30 @@ export function createGame(view) {
     return { dq, dr, x: u.x - u0.x, y: u.y - u0.y };
   }
 
+  // Letting go is quick; weighing costs the turn. Neither can be done aground.
+  function handleCable(s, cmd) {
+    if (s.grounded || s.grappledTo) return;
+    if (cmd === 'letgo' && s.anchor === 'up') {
+      if (!ctx.board.anchorable(s.q, s.r)) {
+        log('No bottom here — the lead finds no ground for an anchor.', 'you');
+        return;
+      }
+      s.anchor = 'down';
+      log(s.name + ' lets go the best bower and brings up.', s.isYou ? 'you' : 'foe');
+    } else if (cmd === 'weigh' && s.anchor === 'down') {
+      s.anchor = 'weighing';
+      log('Hands to the capstan — the anchor is coming home. She lies still this turn.', 'you');
+    }
+  }
+
+  // How far the helm will answer: hard over under way, one point on a spring
+  // at anchor, and not at all with her keel in the sand.
+  function helmLimit(s) {
+    if (s.grounded) return 0;
+    if (s.anchor !== 'up') return 1;
+    return s.turnMax;
+  }
+
   function endOfTurn() {
     for (const s of ctx.ships) {
       if (s.struck) continue;
@@ -84,6 +108,20 @@ export function createGame(view) {
         }
       }
       if (s.rudderJam > 0) s.rudderJam -= 1;
+      if (s.anchor === 'weighing') {
+        s.anchor = 'up';
+        log(s.name + '’s anchor is catted — she is under way again.', s.isYou ? 'you' : 'foe');
+      }
+      if (s.grounded) {
+        // Lay out a kedge, run the guns aft, and hope. Hands and slack canvas help.
+        const odds = 0.15 + 0.3 * crewFrac(s) + (s.sails === 'takein' ? 0.2 : 0);
+        if (chance(odds)) {
+          s.grounded = false;
+          log(s.name + ' warps off the shoal and floats free.', s.isYou ? 'you' : 'foe');
+        } else if (s.isYou) {
+          log('Still fast aground — she will not budge.', 'foe');
+        }
+      }
     }
     for (const s of ctx.ships) {
       if (checkStrike(s, ctx)) { log(s.name + ' strikes her colours!', 'big'); bus.emit('struck', s); }
@@ -123,9 +161,18 @@ export function createGame(view) {
       you.sails = orders.sails;
       for (const s of acting) s.sails = aiPlan.get(s.uid).sails;
 
+      handleCable(you, orders.cable);
       const from = new Map(ctx.ships.map(s => [s.uid, { q: s.q, r: s.r }]));
-      applyHelm(you, orders.helm, ctx.wind, log);
-      for (const s of acting) applyHelm(s, aiPlan.get(s.uid).helm, ctx.wind, log);
+      const lim = helmLimit(you);
+      const helm = Math.max(-lim, Math.min(lim, orders.helm));
+      if (madeFast(you) && helm !== 0 && !you.grounded) {
+        log('A spring on the cable warps her round to bring the guns to bear.', 'you');
+      }
+      applyHelm(you, helm, ctx.wind, log);
+      for (const s of acting) {
+        const l = helmLimit(s);
+        applyHelm(s, Math.max(-l, Math.min(l, aiPlan.get(s.uid).helm)), ctx.wind, log);
+      }
       const paths = moveShips(ctx, log);
       await view.animateMoves(from, paths, shift);
 

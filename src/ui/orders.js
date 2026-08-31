@@ -10,7 +10,7 @@ const SHOT_TAG = { round: 'rnd', chain: 'chn', grape: 'grp', double: 'dbl' };
 export function createOrders(root, hintEl, game, onChange) {
   const segs = [
     ['segHelm', 'helm'], ['segSails', 'sails'], ['segShot', 'shot'],
-    ['segGrap', 'grapple'], ['segMelee', 'melee'],
+    ['segGrap', 'grapple'], ['segMelee', 'melee'], ['segCable', 'cable'],
   ];
 
   for (const [id, key] of segs) {
@@ -50,6 +50,16 @@ export function createOrders(root, hintEl, game, onChange) {
     }
     if (Math.abs(orders.helm) > you.turnMax) game.setOrder('helm', String(Math.sign(orders.helm) * you.turnMax));
 
+    // Ground tackle: you can only let go where the lead finds bottom, and only
+    // weigh what is already down.
+    const canAnchor = you.anchor === 'up' && !you.grounded && ctx.board.anchorable(you.q, you.r);
+    const canWeigh = you.anchor === 'down' && !you.grounded;
+    document.getElementById('anchorBtn').disabled = !canAnchor;
+    document.getElementById('weighBtn').disabled = !canWeigh;
+    if ((orders.cable === 'letgo' && !canAnchor) || (orders.cable === 'weigh' && !canWeigh)) {
+      game.setOrder('cable', 'stand');
+    }
+
     const enemies = ctx.ships.filter(s => !s.struck && s.side !== you.side);
     const nearest = enemies.sort((a, b) => dist(you, a) - dist(you, b))[0];
     const far = !nearest || dist(you, nearest) > 2;
@@ -86,11 +96,16 @@ export function createOrders(root, hintEl, game, onChange) {
       : batteries + (orders.shot === 'hold' ? ' · held' : ' · ' + orders.shot) +
         (willDraw && willDraw.length ? ' · drawing ' + willDraw.join('/') : '');
     const hands = ['', ' · short-handed', ' · skeleton crew'][shortHanded(you)];
+    const ground = you.grounded ? ' · AGROUND'
+      : you.anchor === 'down' ? ' · at anchor'
+      : you.anchor === 'weighing' ? ' · weighing' : '';
     const range = nearest
       ? ' · range ' + dist(you, nearest) + (game.visibleTo(you, nearest) ? '' : ' (lost from sight)')
       : '';
-    hintEl.textContent = ATT_NAMES[att] + ' → ' + spd + ' hex' + (spd === 1 ? '' : 'es') +
-      hands + range + ' · ' + gun;
+    const way = you.grounded ? 'Aground → 0 hexes'
+      : you.anchor !== 'up' ? 'Riding at anchor → 0 hexes'
+      : ATT_NAMES[att] + ' → ' + spd + ' hex' + (spd === 1 ? '' : 'es');
+    hintEl.textContent = way + ground + hands + range + ' · ' + gun;
   }
 
   return { refresh };

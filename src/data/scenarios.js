@@ -8,6 +8,8 @@
 //   ship.side   'friendly' | 'hostile'
 //   ship.role   'player' | 'enemy' | 'quarry' | 'ward'
 //   ship.ai     'engage' | 'flee' | 'escort'
+//   ship.stats  optional { hull, rigging, crew, quality } override, for
+//               tuning a level without inventing a new ship class
 
 export const SCENARIOS = [
   {
@@ -46,18 +48,22 @@ Take her, or lose the despatches.`,
     id: 'protect',
     name: 'Convoy Duty',
     map: 'shoals',
-    objective: { type: 'protect', turnLimit: 12 },
+    objective: { type: 'protect', turnLimit: 10 },
     briefing:
 `The sugar hoy MARGUERITE is worth more than your ship, your crew and your commission together, and she sails like a haystack. Two privateers have come out of the shoals after her.
 
-Light airs today — nobody moves fast, and the shoals will not move at all. Put yourself between her and them for twelve turns and the anchorage guns will do the rest.
+Light airs today — nobody moves fast, and the shoals will not move at all. Put yourself between her and them for ten turns and the anchorage guns will do the rest.
+
+Sound your way: the pale water is a bank that will have your keel out of her at speed, and the tinted patches are holding ground where an anchor will bite. Anchored, a spring on the cable still lets you warp round and bring a broadside to bear — but weighing again costs you a turn.
 
 If she strikes, you may as well not come home.`,
     ships: [
       { type: 'sloop', side: 'friendly', role: 'player', name: 'Alacrity', q: 4, r: 6, facing: 0 },
       { type: 'merchantman', side: 'friendly', role: 'ward', ai: 'flee', name: 'Marguerite', q: 5, r: 7, facing: 0 },
-      { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Vautour', q: 2, r: 3, facing: 3 },
-      { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Hirondelle', q: 8, r: 0, facing: 3 },
+      { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Vautour', q: 2, r: 3, facing: 3,
+        stats: { crew: 7, quality: 0.95 } },
+      { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Hirondelle', q: 9, r: -1, facing: 3,
+        stats: { hull: 5, crew: 6, quality: 0.9 } },
     ],
   },
   {

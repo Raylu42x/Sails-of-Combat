@@ -6,6 +6,9 @@ let nextId = 1;
 
 export function createShip(spec) {
   const t = shipType(spec.type);
+  // A scenario may weaken or stiffen a ship without inventing a new class.
+  const o = spec.stats || {};
+  const stat = (k, d) => (o[k] === undefined ? d : o[k]);
   // Every battery starts loaded with round shot, run out and ready.
   const guns = {};
   for (const id of Object.keys(t.mounts)) guns[id] = { reload: 0, shot: 'round' };
@@ -19,11 +22,12 @@ export function createShip(spec) {
     isYou: spec.role === 'player',
     q: spec.q, r: spec.r, facing: spec.facing || 0,
     rig: t.rig, speeds: t.speeds, turnMax: t.turnMax, tackOdds: t.tackOdds,
-    quality: t.quality,
-    hull: t.hull, hullMax: t.hull,
-    rigging: t.rigging, rigMax: t.rigging,
-    crew: t.crew, crewMax: t.crew,
+    quality: stat('quality', t.quality),
+    hull: stat('hull', t.hull), hullMax: stat('hull', t.hull),
+    rigging: stat('rigging', t.rigging), rigMax: stat('rigging', t.rigging),
+    crew: stat('crew', t.crew), crewMax: stat('crew', t.crew),
     sails: 'battle', guns, rudderJam: 0, inIrons: false, struck: false,
+    anchor: 'up', grounded: false,
     grappledTo: null, seen: true,
   };
 }
@@ -36,6 +40,8 @@ export const isAlive = s => !s.struck;
 // How much of the crew is left to work the ship. Below half she is short-handed:
 // slower to reload, slower to hand sail, and far less likely to stay in stays.
 export const crewFrac = s => s.crew / s.crewMax;
+// Riding at anchor, weighing, or hard on the ground: she is going nowhere.
+export const madeFast = s => s.anchor !== 'up' || s.grounded;
 export function shortHanded(s) {
   const f = crewFrac(s);
   return f >= 0.5 ? 0 : f >= 0.25 ? 1 : 2; // 0 full, 1 short, 2 skeleton
