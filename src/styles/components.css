@@ -1,0 +1,78 @@
+/* --- ship cards --- */
+.card { flex: 1 1 140px; background: var(--panel); border: 1px solid var(--chart); padding: 4px 8px 6px; }
+.card .name { font-size: 11.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; }
+.card.you .name { color: var(--brass); }
+.card.foe .name { color: var(--signal); }
+.card.ward .name { color: var(--ink); }
+.card.hidden-ship { opacity: 0.42; }
+.card.struck { opacity: 0.3; text-decoration: line-through; }
+.bar { display: flex; align-items: center; gap: 5px; margin-top: 3px; }
+.bar .lb { width: 30px; font-size: 9px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); }
+.bar .track { flex: 1; height: 4px; background: rgba(0,0,0,0.45); }
+.bar .fill { height: 100%; transition: width 180ms linear; }
+.you .fill { background: var(--brass); }
+.foe .fill { background: var(--signal); }
+.ward .fill { background: var(--ink); }
+
+/* --- forecast line --- */
+.hint {
+  flex: none; font-family: "IBM Plex Mono", monospace;
+  font-size: 11px; color: var(--brass); min-height: 1.3em; text-align: center;
+}
+
+/* --- order segments --- */
+.orders { display: flex; flex-direction: column; gap: 4px; flex: none; }
+.orow { display: flex; gap: 4px; align-items: stretch; }
+.orow .lbl { width: 40px; display: flex; align-items: center; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); }
+.seg { flex: 1; display: flex; gap: 3px; }
+.seg button {
+  flex: 1; font-size: var(--ui-md); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 8px 0; border: 1px solid var(--chart);
+  background: transparent; color: var(--ink-dim); cursor: pointer;
+  min-height: 34px;
+}
+.seg button.on { border-color: var(--brass); color: var(--brass); background: rgba(217,164,65,0.10); }
+.seg button:disabled { opacity: 0.3; cursor: default; }
+.seg button:focus-visible { outline: 2px solid var(--flash); outline-offset: 1px; }
+
+.execrow { display: flex; gap: 5px; flex: none; }
+.execrow button { font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
+#exec { flex: 2.6; font-size: var(--ui-lg); padding: 11px 0; border: 1px solid var(--brass); background: var(--brass); color: var(--sea); }
+#exec:disabled { opacity: 0.4; }
+#restart { flex: 1; font-size: var(--ui-md); border: 1px solid var(--chart); background: transparent; color: var(--ink-dim); }
+
+/* --- log --- */
+.log {
+  flex: none; background: var(--panel); border: 1px solid var(--chart);
+  padding: 5px 9px; font-family: "IBM Plex Mono", monospace;
+  font-size: 11px; line-height: 1.5; color: var(--ink-dim);
+  height: 58px; overflow-y: auto;
+}
+.log .you { color: var(--brass); }
+.log .foe { color: var(--signal); }
+.log .big { color: var(--flash); }
+.log .turnhead { color: var(--ink); }
+
+/* --- briefing / verdict overlay --- */
+.banner {
+  position: fixed; inset: 0; display: none;
+  align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+  background: rgba(11,27,36,0.93); text-align: center; padding: 26px 20px; z-index: 10;
+  overflow-y: auto;
+}
+.banner.show { display: flex; }
+.banner h2 { margin: 0; font-size: clamp(26px, 7vw, 38px); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.banner p {
+  font-family: "IBM Plex Mono", monospace; font-size: 12.5px; line-height: 1.6;
+  color: var(--ink); margin: 0; max-width: 46ch; text-align: left; white-space: pre-line;
+}
+.banner .picks { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 46ch; }
+.banner .pick {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 7px 12px; border: 1px solid var(--chart); background: transparent; color: var(--ink-dim); cursor: pointer;
+}
+.banner .pick.on { border-color: var(--brass); color: var(--brass); }
+.banner #bBtn {
+  font-size: var(--ui-lg); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 12px 38px; border: 1px solid var(--brass); background: transparent; color: var(--brass); cursor: pointer;
+}

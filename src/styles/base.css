@@ -1,0 +1,37 @@
+/* Committed single-theme: night gunnery chart. Painted explicitly so it holds
+   on any host ground — no light-mode variant by design. */
+:root {
+  --sea: #0B1B24;
+  --panel: #10242F;
+  --chart: #1D3A48;
+  --chart-dim: #152C38;
+  --land: #24404A;
+  --land-tall: #35525A;
+  --ink: #D8E4E8;
+  --ink-dim: #7E97A2;
+  --brass: #D9A441;
+  --signal: #E4593F;
+  --flash: #F2E9D8;
+
+  --ui-sm: 10px;
+  --ui-md: 13px;
+  --ui-lg: 16px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: var(--sea);
+  color: var(--ink);
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+button { font-family: inherit; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
