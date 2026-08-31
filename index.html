@@ -15,10 +15,7 @@
 <div class="wrap">
   <header>
     <h1>Sails of Combat</h1>
-    <div class="headright">
-      <div class="sub" id="turnLabel">Turn 1</div>
-      <button id="mute" class="icon-btn" title="Sound on/off" aria-label="Sound on or off">♪</button>
-    </div>
+    <div class="sub" id="turnLabel">Turn 1</div>
   </header>
 
   <div id="boardBox"><canvas id="sea"></canvas></div>
@@ -45,7 +42,7 @@
           <button data-v="round" class="on">Round</button><button data-v="chain">Chain</button><button data-v="grape">Grape</button><button data-v="double">Double</button><button data-v="hold">Hold</button>
         </div>
       </div>
-      <div class="orow"><span class="lbl">Cable</span>
+      <div class="orow" id="cableRow"><span class="lbl">Cable</span>
         <div class="seg" id="segCable">
           <button data-v="stand" class="on">Stand on</button><button data-v="letgo" id="anchorBtn">Let go anchor</button><button data-v="weigh" id="weighBtn">Weigh anchor</button>
         </div>
@@ -68,6 +65,7 @@
     <div class="execrow">
       <button id="exec">Make it so</button>
       <button id="restart">Levels</button>
+      <button id="mute" class="icon-btn" title="Sound on or off" aria-label="Sound on or off">♪</button>
     </div>
 
     <div class="log" id="log"></div>

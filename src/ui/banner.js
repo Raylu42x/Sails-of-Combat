@@ -16,6 +16,10 @@ export function createBanner(el, onStart) {
   let pending = SCENARIOS[0];
   let current = SCENARIOS[0];
   let mode = 'briefing';
+  // The two buttons swap jobs by mode, so the brass one is always the safe,
+  // expected answer: take command before an action, resume during one.
+  let primaryFn = () => {};
+  let altFn = null;
 
   function renderList() {
     listEl.innerHTML = '';
@@ -42,9 +46,12 @@ export function createBanner(el, onStart) {
     titleEl.textContent = sc.name;
     titleEl.style.color = 'var(--brass)';
     textEl.textContent = sc.briefing;
-    btn.textContent = sc.id === current.id ? 'Take command' : 'Take command';
+    btn.textContent = sc.id === current.id && el.dataset.inAction === '1'
+      ? 'Begin again' : 'Take command';
+    primaryFn = () => start(sc);
     altBtn.textContent = 'Resume action';
     altBtn.style.display = el.dataset.inAction === '1' ? '' : 'none';
+    altFn = hide;
     show();
   }
 
@@ -56,7 +63,9 @@ export function createBanner(el, onStart) {
     titleEl.style.color = v.won ? 'var(--brass)' : v.draw ? 'var(--ink)' : 'var(--signal)';
     textEl.textContent = v.text;
     btn.textContent = 'Sail again';
+    primaryFn = () => start(pending);
     altBtn.style.display = 'none';
+    altFn = null;
     show();
   }
 
@@ -67,24 +76,30 @@ export function createBanner(el, onStart) {
     pending = current;
     titleEl.textContent = 'Levels';
     titleEl.style.color = 'var(--ink)';
-    textEl.textContent = 'Choose an action to sail, or resume the one you are in. ' +
-      'Choosing the level you are already sailing starts it again from the beginning.';
-    btn.textContent = 'Restart this action';
-    altBtn.textContent = 'Resume action';
+    textEl.textContent = 'Choose an action to sail — you will get its briefing before you commit. ' +
+      'Nothing here abandons the action you are in unless you say so.';
+    // Resume is the safe answer, so it is the one under your thumb.
+    btn.textContent = 'Resume action';
+    primaryFn = hide;
+    altBtn.textContent = 'Begin ' + current.name + ' again';
     altBtn.style.display = '';
+    altFn = () => start(current);
     show();
   }
 
-  const hide = () => el.classList.remove('show');
+  function hide() { el.classList.remove('show'); }
 
-  btn.addEventListener('pointerdown', () => {
+  function start(sc) {
     sfx.wake();
-    current = pending;
+    pending = sc;
+    current = sc;
     el.dataset.inAction = '1';
     hide();
-    onStart(pending.id);
-  });
-  altBtn.addEventListener('pointerdown', () => { sfx.click(); hide(); });
+    onStart(sc.id);
+  }
+
+  btn.addEventListener('pointerdown', () => { sfx.wake(); primaryFn(); });
+  altBtn.addEventListener('pointerdown', () => { sfx.click(); if (altFn) altFn(); });
 
   return {
     showBriefing, showVerdict, showPicker, hide,
