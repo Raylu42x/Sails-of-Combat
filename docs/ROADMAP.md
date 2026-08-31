@@ -83,21 +83,28 @@ what it touches so the cost is visible before anyone starts.
     media query; the renderer should honour it too).
 
 
-## Requested, not yet scheduled
+## Shipped since the split
 
-Raised 2026-08-30, written up in [IDEAS.md](IDEAS.md) with the files each would
-touch. Not started.
+Raised 2026-08-30 and built the same day:
 
-- Sound effects, driven off the events the renderer already listens to.
-- Break off a level in progress, and reach the level picker from Restart.
-- Crew loss that bites before a ship strikes — reloads, sail handling, tacking.
-  (Rigging damage already slows a ship; that one is done and just needs saying
-  in the HUD.)
-- More weapon types: long guns, carronades, swivels, limited magazines.
-- Anchoring — a turn to weigh, and no anchoring in deep water. Needs depth on
-  the chart, which shoals and grounding would then share.
-- Ammunition chosen when a battery is loaded, not when it fires, so you cannot
-  switch types on a loaded gun.
-- Boarding as a real crew-against-crew fight rather than one roll a turn.
-- **Future:** harbour assault — shore batteries, forts with fixed arcs, booms,
-  fire ships, and a tide window to get back out.
+- Sound effects, synthesised — no asset files.
+- LEVELS opens over a running action: abandon it, restart it, or resume.
+- Crew losses that bite: short-handed reloads, a skeleton crew that cannot
+  carry full sail, worse odds of staying in stays, and a ship that is only lost
+  at zero crew. (Rigging damage already slowed a ship.)
+- Gun types — long guns, carronades, swivels — as data on each mount.
+- Ammunition belongs to the loaded gun: change your mind and the crews must
+  draw the charge, at the cost of a reload.
+- Depth on the chart, anchoring where the lead finds bottom, a turn to weigh, a
+  spring on the cable, shoals that ground you at speed.
+- Boarding as a running fight for the deck with committed crews and momentum.
+- Gun-arc overlay and keyboard orders.
+- Per-scenario stat overrides, so difficulty is tuned in data.
+
+## Still ahead, from the same list
+
+- **Harbour assault** — shore batteries, forts with fixed arcs, booms, fire
+  ships, and a tide window to get back out. The biggest single piece left, and
+  depth, sight lines and immobile gun platforms are now all in place for it.
+- Limited magazines, so running out of chain mid-chase is possible.
+- Crew stations, so grape kills gunners or topmen rather than an abstract crew.

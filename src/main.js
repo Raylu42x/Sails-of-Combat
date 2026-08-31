@@ -94,5 +94,31 @@ renderer.resize();
 refresh();
 banner.showBriefing(banner.pending);
 
+// Keyboard orders: the helm on the arrows, shot on the number keys, space to
+// give the order. Cheap to add, and the whole game becomes playable one-handed.
+const SHOT_KEYS = { '1': 'round', '2': 'chain', '3': 'grape', '4': 'double', '5': 'hold' };
+window.addEventListener('keydown', ev => {
+  const ctx = game.state();
+  if (!ctx || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  const banner = document.getElementById('banner');
+  if (banner.classList.contains('show')) return;
+  const orders = game.getOrders();
+  let handled = true;
+  switch (ev.key) {
+    case 'ArrowLeft':  game.setOrder('helm', String(Math.max(-ctx.you.turnMax, orders.helm - 1))); break;
+    case 'ArrowRight': game.setOrder('helm', String(Math.min(ctx.you.turnMax, orders.helm + 1))); break;
+    case 'ArrowUp':    game.setOrder('sails', orders.sails === 'takein' ? 'battle' : 'full'); break;
+    case 'ArrowDown':  game.setOrder('sails', orders.sails === 'full' ? 'battle' : 'takein'); break;
+    case ' ': case 'Enter': sfx.wake(); game.execute(); break;
+    case 'l': case 'L': if (!ctx.busy) banner_showPicker(); break;
+    case 'm': case 'M': sfx.toggleMute(); paintMute(); break;
+    default:
+      if (SHOT_KEYS[ev.key]) game.setOrder('shot', SHOT_KEYS[ev.key]);
+      else handled = false;
+  }
+  if (handled) { ev.preventDefault(); refresh(); }
+});
+const banner_showPicker = () => banner.showPicker();
+
 // Debug handle: `__soc.game.state()` in the console while testing.
 window.__soc = { game, renderer };

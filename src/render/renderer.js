@@ -1,7 +1,8 @@
-import { angleOf, dist } from '../core/hex.js';
+import { angleOf, dist, relBearing } from '../core/hex.js';
 import { attOf } from '../core/wind.js';
 import { pathOf } from '../core/movement.js';
-import { simFacing } from '../core/ship.js';
+import { isLoaded, mountsOf, simFacing } from '../core/ship.js';
+import { acceptsShot, rangeOf } from '../core/combat.js';
 import { createLayout } from './layout.js';
 import { sfx } from '../audio/sfx.js';
 
@@ -220,6 +221,31 @@ export function createRenderer(canvas, box, game) {
     const path = inIrons ? [] : pathOf(you, ctx, { facing: f, sails: orders.sails, inIrons });
     cx.fillStyle = 'rgba(217,164,65,0.16)';
     for (const c of path) { hexPath(L.px(c.q, c.r)); cx.fill(); }
+    drawArcs(ctx, path.length ? path[path.length - 1] : you, f);
+  }
+
+  // Where the guns will bear from where this turn's orders leave her: only the
+  // batteries that are loaded with the charge you have ordered, since a gun
+  // holding something else has to be drawn first.
+  function drawArcs(ctx, from, facing) {
+    const you = ctx.you;
+    const orders = game.getOrders();
+    if (orders.shot === 'hold' || orders.sails === 'full') return;
+    for (const [id, mount] of mountsOf(you)) {
+      if (!isLoaded(you, id) || !acceptsShot(mount, orders.shot)) continue;
+      if (you.guns[id].shot !== orders.shot) continue;
+      const range = rangeOf(mount, orders.shot);
+      cx.fillStyle = mount.chaser ? 'rgba(242,233,216,0.07)' : 'rgba(242,233,216,0.05)';
+      for (const c of ctx.board.cells()) {
+        const d = dist(from, c);
+        if (d < 1 || d > range) continue;
+        if (!mount.arcs.includes(relBearing(from, c, facing))) continue;
+        if (ctx.board.landAt(c.q, c.r)) continue;
+        if (ctx.board.sightBlocked(from, c)) continue;
+        hexPath(L.px(c.q, c.r), 0.9);
+        cx.fill();
+      }
+    }
   }
 
   function drawRangeLine(ctx, target) {
