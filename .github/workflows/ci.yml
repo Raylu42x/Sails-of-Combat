@@ -1,0 +1,30 @@
+# Every push and every pull request plays the whole game headless. Two people
+# can edit the same file and still merge cleanly while breaking the rules
+# between them — this is what catches that.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Every scenario reaches a verdict
+        run: node tests/smoke.mjs
+
+      - name: Boarding always resolves
+        run: node tests/boarding.mjs
+
+      - name: Levels are winnable and losable
+        run: node tests/balance.mjs
+
+      - name: Modules all load
+        run: node --input-type=module -e "import('./src/core/game.js')"
