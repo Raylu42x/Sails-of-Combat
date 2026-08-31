@@ -4,6 +4,7 @@ import { createHud } from './ui/hud.js';
 import { createLog } from './ui/log.js';
 import { createOrders } from './ui/orders.js';
 import { createBanner } from './ui/banner.js';
+import { sfx } from './audio/sfx.js';
 
 const canvas = document.getElementById('sea');
 const box = document.getElementById('boardBox');
@@ -45,19 +46,36 @@ game.on('reset', ctx => {
 game.on('change', refresh);
 game.on('busy', busy => { execBtn.disabled = busy || game.state().over; });
 game.on('finished', v => banner.showVerdict(v));
+game.on('turn', () => sfx.bell());
+game.on('struck', () => sfx.strike());
+game.on('grappled', () => sfx.grapple());
 
 function startScenario(id) {
   game.start(id);
+  banner.setCurrent(game.state().scenario);
   execBtn.disabled = false;
   refresh();
 }
 
-execBtn.addEventListener('pointerdown', () => game.execute());
+execBtn.addEventListener('pointerdown', () => { sfx.wake(); game.execute(); });
+// LEVELS opens the picker over the action: abandon it, restart it, or go back.
 document.getElementById('restart').addEventListener('pointerdown', () => {
   const ctx = game.state();
   if (!ctx || ctx.busy) return;
-  startScenario(ctx.scenario.id);
+  sfx.click();
+  banner.showPicker();
 });
+
+const muteBtn = document.getElementById('mute');
+const paintMute = () => {
+  muteBtn.textContent = sfx.muted ? '♪̸' : '♪';
+  muteBtn.classList.toggle('off', sfx.muted);
+};
+muteBtn.addEventListener('pointerdown', () => { sfx.toggleMute(); if (!sfx.muted) sfx.click(); paintMute(); });
+paintMute();
+
+// Audio cannot start until the user has touched the page.
+window.addEventListener('pointerdown', () => sfx.wake(), { once: true });
 
 let resizeTimer = null;
 const onResize = () => {

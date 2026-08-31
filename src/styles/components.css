@@ -72,7 +72,21 @@
   padding: 7px 12px; border: 1px solid var(--chart); background: transparent; color: var(--ink-dim); cursor: pointer;
 }
 .banner .pick.on { border-color: var(--brass); color: var(--brass); }
+.banner .bbtns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.banner #bAlt {
+  font-size: var(--ui-md); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 12px 22px; border: 1px solid var(--chart); background: transparent; color: var(--ink-dim); cursor: pointer;
+}
 .banner #bBtn {
   font-size: var(--ui-lg); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
   padding: 12px 38px; border: 1px solid var(--brass); background: transparent; color: var(--brass); cursor: pointer;
 }
+
+/* --- header --- */
+.headright { display: flex; align-items: center; gap: 8px; }
+.icon-btn {
+  border: 1px solid var(--chart); background: transparent; color: var(--brass);
+  font-size: 13px; line-height: 1; padding: 5px 8px; cursor: pointer; min-width: 30px;
+}
+.icon-btn.off { color: var(--ink-dim); }
+.icon-btn:focus-visible { outline: 2px solid var(--flash); outline-offset: 1px; }

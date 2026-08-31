@@ -83,7 +83,7 @@ export function createGame(view) {
       if (s.rudderJam > 0) s.rudderJam -= 1;
     }
     for (const s of ctx.ships) {
-      if (checkStrike(s, ctx)) log(s.name + ' strikes her colours!', 'big');
+      if (checkStrike(s, ctx)) { log(s.name + ' strikes her colours!', 'big'); bus.emit('struck', s); }
     }
     const shift = maybeShift(ctx.wind, ctx.turn);
     if (shift) {
@@ -93,6 +93,7 @@ export function createGame(view) {
     }
     ctx.turn += 1;
     log('— Turn ' + ctx.turn + ' —', 'turnhead');
+    bus.emit('turn', ctx.turn);
   }
 
   function finish(verdict) {
@@ -113,7 +114,7 @@ export function createGame(view) {
       const foe = you.grappledTo;
       const res = meleeRound(you, foe, orders.melee, log);
       await view.melee(you, foe, res);
-      for (const s of [you, foe]) if (checkStrike(s, ctx)) log(s.name + ' strikes her colours!', 'big');
+      for (const s of [you, foe]) if (checkStrike(s, ctx)) { log(s.name + ' strikes her colours!', 'big'); bus.emit('struck', s); }
     } else {
       const shift = recenter();
       you.sails = orders.sails;
@@ -125,15 +126,16 @@ export function createGame(view) {
       const paths = moveShips(ctx, log);
       await view.animateMoves(from, paths, shift);
 
-      if (orders.grapple === 'yes') tryGrapple(you, ctx, true, log);
-      for (const s of acting) if (aiWantsGrapple(s, ctx)) tryGrapple(s, ctx, false, log);
+      let hooked = orders.grapple === 'yes' ? tryGrapple(you, ctx, true, log) : null;
+      for (const s of acting) if (aiWantsGrapple(s, ctx)) hooked = tryGrapple(s, ctx, false, log) || hooked;
+      if (hooked) bus.emit('grappled', hooked);
 
       const results = [];
       fireAll(you, ctx, orders.shot, results);
       for (const s of acting) fireAll(s, ctx, aiPlan.get(s.uid).shot, results);
       for (const r of results) {
         await view.animateShot(r, applyFireResult, log);
-        if (r.t && checkStrike(r.t, ctx)) log(r.t.name + ' strikes her colours!', 'big');
+        if (r.t && checkStrike(r.t, ctx)) { log(r.t.name + ' strikes her colours!', 'big'); bus.emit('struck', r.t); }
         bus.emit('change', ctx);
       }
     }

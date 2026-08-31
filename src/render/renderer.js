@@ -3,6 +3,7 @@ import { attOf } from '../core/wind.js';
 import { pathOf } from '../core/movement.js';
 import { simFacing } from '../core/ship.js';
 import { createLayout } from './layout.js';
+import { sfx } from '../audio/sfx.js';
 
 const css = getComputedStyle(document.documentElement);
 const C = n => css.getPropertyValue(n).trim();
@@ -63,10 +64,13 @@ export function createRenderer(canvas, box, game) {
       if (r.none) { apply(r, log); return; }
       const A = L.px(r.s.q, r.s.r), B = L.px(r.t.q, r.t.r);
       fx.muzzle = { x: A.x, y: A.y, tx: B.x, ty: B.y, t0: now(), life: 200 };
+      sfx.gun(r.chaser ? 0.6 : 1, dist(r.s, r.t));
       await sleepDraw(120);
       await tween(r.chaser ? 180 : 240, k => { fx.tracer = { x1: A.x, y1: A.y, x2: B.x, y2: B.y, k }; });
       fx.tracer = null; fx.muzzle = null;
       apply(r, log);
+      if (r.rake) sfx.rake();
+      else sfx.hit(r.rig && !r.hull ? 'rig' : r.crew && !r.hull ? 'crew' : 'hull');
       const color = r.crew && !r.hull ? C('--signal') : C('--flash');
       addFlash(B.x, B.y, color, !!r.rake || r.shot === 'double');
       if (r.rake || r.shot === 'double') fx.shake = 1;
@@ -78,6 +82,7 @@ export function createRenderer(canvas, box, game) {
       await sleepDraw(r.chaser ? 300 : 400);
     },
     async melee(a, b, res) {
+      sfx.clash();
       const A = shipPx(a), B = shipPx(b);
       addFlash((A.x + B.x) / 2, (A.y + B.y) / 2, C('--signal'), true);
       if (res.bLoss) addFloater(B.x, B.y, '−' + res.bLoss + ' CREW', C('--signal'));
