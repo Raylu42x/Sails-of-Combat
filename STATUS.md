@@ -15,3 +15,9 @@ One line per agent/human task. Check here before picking a worktree name.
   (worktree: ../Sails-of-Combat-core-modular-split, branch agent/core-modular-split)
   Open: harbour assault (shore batteries, booms, fire ships, tide window) is
   the next big piece; docs/IDEAS.md holds the rest.
+- [helm-and-ship-details] DONE helm resets to stay-on-course each turn, and
+  after a wind shift (or when the default course leads into irons) there is no
+  silent default: the helm row flashes and Make It So waits for a course
+  (issue #5). Tapping any ship card opens a detail sheet — rig, draught,
+  speeds by point of sail, every mount with its gun, arc and (own ship only)
+  charge and reload (issue #6). (branch agent/helm-and-ship-details — Bryan's side)
