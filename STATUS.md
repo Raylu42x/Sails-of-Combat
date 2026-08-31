@@ -1,0 +1,1 @@
+- [core-modular-split] STARTED split index.html into ES modules, add docs, add map/scenario/ship-type scaffolding (worktree: ../Sails-of-Combat-core-modular-split)
