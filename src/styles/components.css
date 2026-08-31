@@ -17,11 +17,17 @@
 /* --- forecast line --- */
 .hint {
   flex: none; font-family: "IBM Plex Mono", monospace;
-  font-size: 11px; color: var(--brass); min-height: 1.3em; text-align: center;
+  font-size: 11px; color: var(--brass); text-align: center;
+  /* Two lines' worth, always: it wraps on some levels and not others. */
+  min-height: 2.7em; display: flex; align-items: center; justify-content: center;
 }
 
 /* --- order segments --- */
+.orders-area { flex: none; }
 .orders { display: flex; flex-direction: column; gap: 4px; flex: none; }
+/* A row that does not apply on this map keeps its space rather than collapsing
+   and dragging every control under the cursor somewhere else. */
+.orow.reserved { visibility: hidden; }
 .orow { display: flex; gap: 4px; align-items: stretch; }
 .orow .lbl { width: 40px; display: flex; align-items: center; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); }
 .seg { flex: 1; display: flex; gap: 3px; }
@@ -35,7 +41,7 @@
 .seg button:disabled { opacity: 0.3; cursor: default; }
 .seg button:focus-visible { outline: 2px solid var(--flash); outline-offset: 1px; }
 
-.execrow { display: flex; gap: 5px; flex: none; }
+.execrow { display: flex; gap: 5px; flex: none; align-items: stretch; }
 .execrow button { font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
 #exec { flex: 2.6; font-size: var(--ui-lg); padding: 11px 0; border: 1px solid var(--brass); background: var(--brass); color: var(--sea); }
 #exec:disabled { opacity: 0.4; }
@@ -84,11 +90,11 @@
   padding: 12px 38px; border: 1px solid var(--brass); background: transparent; color: var(--brass); cursor: pointer;
 }
 
-/* --- header --- */
-.headright { display: flex; align-items: center; gap: 8px; }
+/* --- sound toggle, in the button row where it always has room --- */
 .icon-btn {
+  flex: 0 0 auto;
   border: 1px solid var(--chart); background: transparent; color: var(--brass);
-  font-size: 13px; line-height: 1; padding: 5px 8px; cursor: pointer; min-width: 30px;
+  font-size: 15px; line-height: 1; padding: 0 12px; cursor: pointer; min-width: 42px;
 }
 .icon-btn.off { color: var(--ink-dim); }
 .icon-btn:focus-visible { outline: 2px solid var(--flash); outline-offset: 1px; }

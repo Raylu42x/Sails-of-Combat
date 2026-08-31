@@ -41,8 +41,14 @@ export function createOrders(root, hintEl, game, onChange) {
     const you = ctx.you;
     const orders = game.getOrders();
     const grappled = !!you.grappledTo;
-    document.getElementById('ordersNormal').style.display = grappled ? 'none' : 'flex';
-    document.getElementById('ordersBoarding').style.display = grappled ? 'flex' : 'none';
+    const normal = document.getElementById('ordersNormal');
+    const boarding = document.getElementById('ordersBoarding');
+    const area = document.getElementById('ordersArea');
+    // Boarding swaps five order rows for one. Hold the block's height so the
+    // buttons below it do not jump up the screen mid-action.
+    if (!grappled && normal.offsetHeight) area.style.minHeight = normal.offsetHeight + 'px';
+    normal.style.display = grappled ? 'none' : 'flex';
+    boarding.style.display = grappled ? 'flex' : 'none';
 
     // Helm: a stiff ship cannot put her helm hard over.
     for (const b of document.getElementById('segHelm').querySelectorAll('button')) {
@@ -50,12 +56,23 @@ export function createOrders(root, hintEl, game, onChange) {
     }
     if (Math.abs(orders.helm) > you.turnMax) game.setOrder('helm', String(Math.sign(orders.helm) * you.turnMax));
 
-    // Ground tackle: you can only let go where the lead finds bottom, and only
-    // weigh what is already down.
-    const canAnchor = you.anchor === 'up' && !you.grounded && ctx.board.anchorable(you.q, you.r);
+    // Ground tackle. On open-ocean charts there is no bottom anywhere, so the
+    // row is hidden entirely rather than sitting there greyed out.
+    const soundings = (ctx.map.water || []).length > 0;
+    document.getElementById('cableRow').classList.toggle('reserved', !soundings);
+    const overGround = ctx.board.anchorable(you.q, you.r);
+    const canAnchor = you.anchor === 'up' && !you.grounded && overGround;
     const canWeigh = you.anchor === 'down' && !you.grounded;
-    document.getElementById('anchorBtn').disabled = !canAnchor;
-    document.getElementById('weighBtn').disabled = !canWeigh;
+    const anchorBtn = document.getElementById('anchorBtn');
+    const weighBtn = document.getElementById('weighBtn');
+    anchorBtn.disabled = !canAnchor;
+    weighBtn.disabled = !canWeigh;
+    anchorBtn.title = you.grounded ? 'She is already fast aground'
+      : you.anchor !== 'up' ? 'The anchor is already down'
+      : overGround ? 'Let go the best bower here — the lead finds bottom'
+      : 'No bottom here. Anchor over the tinted hexes, where there is holding ground.';
+    weighBtn.title = canWeigh ? 'Weigh the anchor — it costs this turn'
+      : 'Nothing to weigh: the anchor is up';
     if ((orders.cable === 'letgo' && !canAnchor) || (orders.cable === 'weigh' && !canWeigh)) {
       game.setOrder('cable', 'stand');
     }
@@ -104,7 +121,9 @@ export function createOrders(root, hintEl, game, onChange) {
     const hands = ['', ' · short-handed', ' · skeleton crew'][shortHanded(you)];
     const ground = you.grounded ? ' · AGROUND'
       : you.anchor === 'down' ? ' · at anchor'
-      : you.anchor === 'weighing' ? ' · weighing' : '';
+      : you.anchor === 'weighing' ? ' · weighing'
+      : ctx.board.anchorable(you.q, you.r) ? ' · holding ground'
+      : '';
     const range = nearest
       ? ' · range ' + dist(you, nearest) + (game.visibleTo(you, nearest) ? '' : ' (lost from sight)')
       : '';
