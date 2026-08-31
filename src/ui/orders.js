@@ -1,7 +1,7 @@
 import { dist } from '../core/hex.js';
 import { ATT_NAMES, attOf } from '../core/wind.js';
 import { isLoaded, madeFast, mountsOf, shortHanded, simFacing, speedOf } from '../core/ship.js';
-import { acceptsShot, momentumText } from '../core/combat.js';
+import { acceptsShot, drawTurns, momentumText, wouldDraw } from '../core/combat.js';
 
 const SHOT_TAG = { round: 'rnd', chain: 'chn', grape: 'grp', double: 'dbl' };
 
@@ -130,13 +130,16 @@ export function createOrders(root, hintEl, game, onChange) {
       .map(([id, m]) => m.tag + ' ' +
         (isLoaded(you, id) ? '✓' + (SHOT_TAG[you.guns[id].shot] || you.guns[id].shot) : you.guns[id].reload))
       .join(' · ');
-    // Ordering a charge the guns are not holding costs a reload to draw.
-    const willDraw = orders.shot !== 'hold' && mountsOf(you)
-      .filter(([id, m]) => isLoaded(you, id) && acceptsShot(m, orders.shot) && you.guns[id].shot !== orders.shot)
-      .map(([, m]) => m.tag);
+    // Ordering a charge the guns are not holding costs a turn to draw — but
+    // only for a battery that has something in reach to fire it at.
+    const draws = wouldDraw(you, ctx, orders.shot);
+    const willDraw = draws.map(d => d.tag);
+    const drawCost = draws.reduce((n, d) => Math.max(n, drawTurns(you, d.mount, orders.shot)), 0);
     const gun = orders.sails === 'full' ? 'guns silent — full sail'
       : batteries + (orders.shot === 'hold' ? ' · held' : ' · ' + orders.shot) +
-        (willDraw && willDraw.length ? ' · drawing ' + willDraw.join('/') : '');
+        (willDraw.length
+          ? ' · drawing ' + willDraw.join('/') + ' (' + drawCost + ' turn' + (drawCost === 1 ? '' : 's') + ')'
+          : '');
     const hands = ['', ' · short-handed', ' · skeleton crew'][shortHanded(you)];
     const ground = you.grounded ? ' · AGROUND'
       : you.anchor === 'down' ? ' · at anchor'
