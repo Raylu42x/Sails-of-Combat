@@ -5,7 +5,7 @@ import { createBoard } from './board.js';
 import { applyHelm, createShip, crewFrac, madeFast, mountsOf } from './ship.js';
 import { attOf, maybeShift, windLabel } from './wind.js';
 import { moveShips } from './movement.js';
-import { applyFireResult, fireAll, meleeRound, tryGrapple } from './combat.js';
+import { applyFireResult, boardingRound, fireAll, startBoarding, tryGrapple } from './combat.js';
 import { aiOrders, aiWantsGrapple } from './ai.js';
 import { checkStrike, evaluate } from './objectives.js';
 import { mapById } from '../data/maps.js';
@@ -153,8 +153,26 @@ export function createGame(view) {
 
     if (you.grappledTo) {
       const foe = you.grappledTo;
-      const res = meleeRound(you, foe, orders.melee, log);
+      if (!ctx.boarding || ctx.boarding.a !== you || ctx.boarding.b !== foe) {
+        ctx.boarding = startBoarding(you, foe);
+      }
+      // The enemy captain reads the fight: press home while winning, stand on
+      // the defensive while losing, and only a beaten ship tries to cut free.
+      const m = ctx.boarding.momentum;
+      const foeAct = m <= -2 ? 'press' : m >= 2 ? 'hold' : (crewFrac(foe) < 0.4 ? 'hold' : 'boarders');
+      const res = boardingRound(ctx.boarding, you, foe, orders.melee, foeAct, log);
       await view.melee(you, foe, res);
+      if (res.parted) ctx.boarding = null;
+      if (res.carried) {
+        res.carried.struck = true;
+        res.carried.grappledTo = null;
+        (res.carried === foe ? you : foe).grappledTo = null;
+        ctx.boarding = null;
+        log(res.carried === foe
+          ? 'Her quarterdeck is carried — the colours come down and the ship is yours!'
+          : 'They have carried your quarterdeck. The Alacrity is taken.', 'big');
+        bus.emit('struck', res.carried);
+      }
       for (const s of [you, foe]) if (checkStrike(s, ctx)) { log(s.name + ' strikes her colours!', 'big'); bus.emit('struck', s); }
     } else {
       const shift = recenter();
@@ -178,7 +196,11 @@ export function createGame(view) {
 
       let hooked = orders.grapple === 'yes' ? tryGrapple(you, ctx, true, log) : null;
       for (const s of acting) if (aiWantsGrapple(s, ctx)) hooked = tryGrapple(s, ctx, false, log) || hooked;
-      if (hooked) bus.emit('grappled', hooked);
+      if (hooked) {
+        // The fight for the deck runs from here until one side carries it.
+        if (you.grappledTo) ctx.boarding = startBoarding(you, you.grappledTo);
+        bus.emit('grappled', hooked);
+      }
 
       const results = [];
       fireAll(you, ctx, orders.shot, results);

@@ -1,6 +1,6 @@
 import { dist, relBearing } from './hex.js';
 import { chance, rnd } from './rng.js';
-import { anyLoaded, isLoaded, mountsOf, shortHanded, speedOf } from './ship.js';
+import { anyLoaded, crewFrac, isLoaded, mountsOf, shortHanded, speedOf } from './ship.js';
 import { gunType } from '../data/ships.js';
 import { attOf } from './wind.js';
 
@@ -150,22 +150,94 @@ export function tryGrapple(s, ctx, wants, log) {
   return null;
 }
 
-export function meleeRound(a, b, act, log) {
-  if (act === 'back') {
-    if (chance(0.7)) {
-      a.grappledTo = null; b.grappledTo = null;
-      log('You cut the lines and fend off — the ships part.', 'you');
-      return { parted: true, aLoss: 0, bLoss: 0 };
+// --- boarding: a running fight for the deck, not a single roll -------------
+//
+// Momentum runs from -3 to +3 in the boarder's favour. Push it to +3 and the
+// deck is carried; let it fall to -3 and your own is. Each side commits as much
+// of the crew as it dares: everything at once wins ground and costs men, the
+// boarding party alone is steadier, and standing on the defensive to repel
+// boarders is the strongest posture but gains nothing.
+
+export const COMMITMENT = {
+  press:    { weight: 1.0,  toll: 1.0,  name: 'all hands' },
+  boarders: { weight: 0.7,  toll: 0.55, name: 'the boarding party' },
+  hold:     { weight: 0.45, toll: 0.35, name: 'repel boarders', defence: 1.35 },
+  back:     { weight: 0.3,  toll: 0.4,  name: 'fall back' },
+};
+
+export const MOMENTUM_TEXT = [
+  'driven back to your own quarterdeck',
+  'losing the waist',
+  'holding, barely',
+  'deck to deck, neither giving',
+  'the waist is yours',
+  'she is nearly carried',
+  'her quarterdeck is yours',
+];
+export const momentumText = m => MOMENTUM_TEXT[Math.max(0, Math.min(6, m + 3))];
+
+export function startBoarding(a, b) {
+  return { a, b, momentum: 0, round: 1 };
+}
+
+// Swivels loaded with grape, fired into the boarders as they come over.
+function swivelSupport(s) {
+  let bonus = 0;
+  for (const [id, m] of mountsOf(s)) {
+    if (gunType(m.gun).only && gunType(m.gun).only.includes('grape') &&
+        isLoaded(s, id) && s.guns[id].shot === 'grape') {
+      s.guns[id] = { reload: reloadTurns(s, m, 'grape'), shot: 'grape' };
+      bonus += 0.25;
     }
-    log('The lines hold — you cannot break free!', 'foe');
   }
-  const aS = a.crew * a.quality * (0.6 + 0.4 * rnd());
-  const bS = b.crew * b.quality * (0.6 + 0.4 * rnd());
-  let aLoss, bLoss;
-  if (act === 'press') { bLoss = 2 + (aS > bS ? 2 : 0); aLoss = 1 + (bS > aS ? 2 : 0); }
-  else { bLoss = aS > bS ? 1 : 0; aLoss = bS > aS ? 1 : 0; }
+  return bonus;
+}
+
+export function boardingRound(fight, a, b, actA, actB, log) {
+  const A = COMMITMENT[actA] || COMMITMENT.press;
+  const B = COMMITMENT[actB] || COMMITMENT.press;
+
+  if (actA === 'back') {
+    // Cutting free is easier when you are not losing the fight for the deck.
+    const odds = 0.45 + fight.momentum * 0.08 + 0.2 * crewFrac(a);
+    if (chance(odds)) {
+      a.grappledTo = null; b.grappledTo = null;
+      log('You cut the lashings and sheer off — the ships part.', 'you');
+      return { parted: true, aLoss: 0, bLoss: 0, done: true };
+    }
+    log('The grapnels hold and her boarders press on — you cannot break free!', 'foe');
+  }
+
+  const swivA = swivelSupport(a), swivB = swivelSupport(b);
+  if (swivA && a.isYou) log('Your swivels sweep her gangway with grape as they come on.', 'you');
+  if (swivB && b.isYou === false && a.isYou) log(b.name + '’s swivels rake your boarders with grape.', 'foe');
+
+  const strength = (s, c, swiv, other) =>
+    s.crew * s.quality * c.weight * (c.defence || 1) * (1 + swiv) *
+    (0.65 + 0.35 * rnd()) * (s.crewMax > other.crewMax ? 1.08 : 1);
+
+  const sA = strength(a, A, swivA, b);
+  const sB = strength(b, B, swivB, a);
+  const margin = (sA - sB) / Math.max(1, sA + sB); // -1 .. +1
+
+  // Casualties fall on both sides; the losing side pays more, and how much
+  // depends on how many men each captain sent over.
+  const base = 1 + Math.round(2.2 * Math.abs(margin));
+  const aLoss = Math.max(0, Math.round((margin > 0 ? 1 : base) * A.toll));
+  const bLoss = Math.max(0, Math.round((margin > 0 ? base : 1) * B.toll));
   a.crew = Math.max(0, a.crew - aLoss);
   b.crew = Math.max(0, b.crew - bLoss);
-  log('Melee on the deck — ' + bLoss + ' of hers down, ' + aLoss + ' of yours.', aS > bS ? 'you' : 'foe');
-  return { parted: false, aLoss, bLoss };
+
+  const swing = Math.abs(margin) > 0.28 ? 2 : Math.abs(margin) > 0.08 ? 1 : 0;
+  fight.momentum = Math.max(-3, Math.min(3, fight.momentum + Math.sign(margin) * swing));
+  fight.round += 1;
+
+  log('Cutlass and pike across the gangway — ' + bLoss + ' of hers down, ' + aLoss +
+      ' of yours. ' + momentumText(fight.momentum) + '.', margin > 0 ? 'you' : 'foe');
+
+  // Nobody fights to the last man: a deck carried is a ship struck.
+  let carried = null;
+  if (fight.momentum >= 3 || b.crew <= 0) carried = b;
+  else if (fight.momentum <= -3 || a.crew <= 0) carried = a;
+  return { parted: false, aLoss, bLoss, carried, momentum: fight.momentum };
 }

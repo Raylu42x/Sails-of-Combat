@@ -1,7 +1,7 @@
 import { dist } from '../core/hex.js';
 import { ATT_NAMES, attOf } from '../core/wind.js';
 import { isLoaded, mountsOf, shortHanded, simFacing, speedOf } from '../core/ship.js';
-import { acceptsShot } from '../core/combat.js';
+import { acceptsShot, momentumText } from '../core/combat.js';
 
 const SHOT_TAG = { round: 'rnd', chain: 'chn', grape: 'grp', double: 'dbl' };
 
@@ -79,7 +79,13 @@ export function createOrders(root, hintEl, game, onChange) {
     if (ctx.over) return;
     const you = ctx.you;
     const orders = game.getOrders();
-    if (you.grappledTo) { hintEl.textContent = 'Grappled with ' + you.grappledTo.name + ' — steel decides now.'; return; }
+    if (you.grappledTo) {
+      const f = ctx.boarding;
+      hintEl.textContent = 'Boarding ' + you.grappledTo.name + ' — ' +
+        (f ? momentumText(f.momentum) : 'the ships are lashed together') +
+        ' · your ' + you.crew + ' hands to her ' + you.grappledTo.crew;
+      return;
+    }
     const att = attOf(simFacing(you, orders.helm), ctx.wind.from);
     const spd = att === 0 ? 0 : speedOf(you, att, orders.sails, ctx.wind);
     // Each battery shows what is in it: a tick and the charge when it is ready,

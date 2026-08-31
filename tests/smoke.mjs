@@ -36,7 +36,7 @@ for (const sc of SCENARIOS) {
         game.setOrder('sails', pick(SAILS, rnd));
         game.setOrder('shot', pick(SHOT, rnd));
         game.setOrder('grapple', rnd() < 0.2 ? 'yes' : 'no');
-        game.setOrder('melee', pick(['press', 'holdm', 'back'], rnd));
+        game.setOrder('melee', pick(['press', 'boarders', 'hold', 'back'], rnd));
         await game.execute();
         if (ctx.turn > 200) break;
       }
