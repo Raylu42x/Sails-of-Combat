@@ -2,6 +2,7 @@ import { DIRS, same } from './hex.js';
 import { attOf } from './wind.js';
 import { chance } from './rng.js';
 import { madeFast, speedOf } from './ship.js';
+import { draughtOf } from '../data/ships.js';
 
 // The track a ship would sail this turn, stopping at land, at the chart's edge,
 // or alongside anything already in the way.
@@ -49,7 +50,8 @@ export function moveShips(ctx, log) {
       const c = path[i];
       if (!board.isShoal(c.q, c.r)) continue;
       const fast = path.length - i > 1 || s.sails === 'full';
-      if (chance(fast ? 0.4 : 0.12)) {
+      const risk = Math.min(0.85, (fast ? 0.4 : 0.12) * draughtOf(s));
+      if (chance(risk)) {
         s.grounded = true;
         path = path.slice(0, i + 1);
         log(s.name + ' strikes the shoal and brings up hard aground!', 'big');

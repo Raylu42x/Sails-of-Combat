@@ -100,6 +100,10 @@ Raised 2026-08-30 and built the same day:
 - Boarding as a running fight for the deck with committed crews and momentum.
 - Gun-arc overlay and keyboard orders.
 - Per-scenario stat overrides, so difficulty is tuned in data.
+- Draught: shallow, medium and deep hulls, so a bank is cover from a big ship.
+- Seven levels, ordered easiest to hardest, using every system above.
+- A balance harness (`node tests/balance.mjs`) that plays each level with a
+  competent stand-in captain and prints win rates.
 
 ## Still ahead, from the same list
 

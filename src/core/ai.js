@@ -2,6 +2,7 @@ import { angleOf, dist, relBearing } from './hex.js';
 import { rnd } from './rng.js';
 import { attOf } from './wind.js';
 import { isLoaded, mountsOf } from './ship.js';
+import { draughtOf } from '../data/ships.js';
 import { acceptsShot, rangeOf } from './combat.js';
 import { pathOf } from './movement.js';
 
@@ -59,7 +60,8 @@ export function aiOrders(s, ctx) {
         if (sails === 'takein') score -= 2;
       }
       if (ctx.board.shotBlocked(pos, foe)) score += mood === 'flee' ? 3 : -3; // land in the way
-      if (ctx.board.isShoal(pos.q, pos.r)) score -= 6;                        // no captain wants this
+      // A deep-draught ship will not follow a sloop over a bank, and knows it.
+      if (ctx.board.isShoal(pos.q, pos.r)) score -= 5 * draughtOf(s);
       if (attOf(f, wind.from) === 0) score -= 100;
       // A nudge to keep the weather gage (or run off before it, when fleeing).
       const gage = ((foe.q - pos.q) * 1.5 * wv.x + (foe.r - pos.r) * 1.5 * wv.y) * (mood === 'flee' ? 0.03 : -0.06);

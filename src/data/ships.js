@@ -3,6 +3,9 @@
 //   speeds   hexes made good at each point of sail:
 //            [in irons, close-hauled, reaching, running]
 //   rig      'fa' fore-and-aft (points high, tacks well) | 'sq' square
+//   draught  'shallow' | 'medium' | 'deep' — how much water she needs, and so
+//            how badly a shoal treats her. A sloop creeps over banks a frigate
+//            dare not go near.
 //   mounts   gun groups, keyed by an id that is also the reload slot.
 //            arcs are bearings relative to the bow: 0 ahead, 1/2 starboard,
 //            3 astern, 4/5 port. `gun` picks the piece; `power` scales the
@@ -40,13 +43,13 @@ const swivels = side => ({
 
 export const SHIP_TYPES = {
   sloop: {
-    id: 'sloop', name: 'Bermuda sloop', short: 'sloop',
+    id: 'sloop', draught: 'shallow', name: 'Bermuda sloop', short: 'sloop',
     rig: 'fa', speeds: [0, 2, 3, 1], turnMax: 2, tackOdds: 0.8,
     hull: 8, rigging: 8, crew: 12, quality: 1.15,
     mounts: { port: battery('port', 'long'), stbd: battery('stbd', 'long') },
   },
   cutter: {
-    id: 'cutter', name: 'Revenue cutter', short: 'cutter',
+    id: 'cutter', draught: 'shallow', name: 'Revenue cutter', short: 'cutter',
     rig: 'fa', speeds: [0, 2, 3, 2], turnMax: 2, tackOdds: 0.85,
     hull: 6, rigging: 7, crew: 9, quality: 1.1,
     mounts: {
@@ -55,7 +58,7 @@ export const SHIP_TYPES = {
     },
   },
   brig: {
-    id: 'brig', name: 'Brig', short: 'brig',
+    id: 'brig', draught: 'medium', name: 'Brig', short: 'brig',
     rig: 'sq', speeds: [0, 1, 3, 2], turnMax: 2, tackOdds: 0.6,
     hull: 10, rigging: 9, crew: 11, quality: 1.05,
     mounts: {
@@ -64,7 +67,7 @@ export const SHIP_TYPES = {
     },
   },
   guardacosta: {
-    id: 'guardacosta', name: 'Guarda costa', short: 'guarda costa',
+    id: 'guardacosta', draught: 'deep', name: 'Guarda costa', short: 'guarda costa',
     rig: 'sq', speeds: [0, 1, 3, 2], turnMax: 1, tackOdds: 0.5,
     hull: 12, rigging: 10, crew: 10, quality: 1.0,
     mounts: {
@@ -73,7 +76,7 @@ export const SHIP_TYPES = {
     },
   },
   frigate: {
-    id: 'frigate', name: 'Frigate', short: 'frigate',
+    id: 'frigate', draught: 'deep', name: 'Frigate', short: 'frigate',
     rig: 'sq', speeds: [0, 1, 3, 2], turnMax: 1, tackOdds: 0.55,
     hull: 16, rigging: 12, crew: 16, quality: 1.1,
     mounts: {
@@ -82,7 +85,7 @@ export const SHIP_TYPES = {
     },
   },
   merchantman: {
-    id: 'merchantman', name: 'Merchantman', short: 'merchantman',
+    id: 'merchantman', draught: 'medium', name: 'Merchantman', short: 'merchantman',
     rig: 'sq', speeds: [0, 1, 2, 2], turnMax: 1, tackOdds: 0.4,
     hull: 11, rigging: 8, crew: 7, quality: 0.8,
     mounts: {
@@ -90,5 +93,8 @@ export const SHIP_TYPES = {
     },
   },
 };
+
+export const DRAUGHT = { shallow: 0.45, medium: 1, deep: 1.9 };
+export const draughtOf = s => DRAUGHT[(s.type || s).draught] || 1;
 
 export const shipType = id => SHIP_TYPES[id] || SHIP_TYPES.sloop;

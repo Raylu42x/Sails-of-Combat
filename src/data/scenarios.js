@@ -48,22 +48,56 @@ Take her, or lose the despatches.`,
     id: 'protect',
     name: 'Convoy Duty',
     map: 'shoals',
-    objective: { type: 'protect', turnLimit: 10 },
+    objective: { type: 'protect', turnLimit: 9 },
     briefing:
-`The sugar hoy MARGUERITE is worth more than your ship, your crew and your commission together, and she sails like a haystack. Two privateers have come out of the shoals after her.
+`You have the brig RATTLER this morning, and a charge you did not ask for. The sugar hoy MARGUERITE is worth more than your ship, your crew and your commission together, and she sails like a haystack. A privateer has come out of the shoals after her.
 
-Light airs today — nobody moves fast, and the shoals will not move at all. Put yourself between her and them for ten turns and the anchorage guns will do the rest.
+Light airs today — nobody moves fast, and the shoals will not move at all. Put yourself between her and him for nine turns and the anchorage guns will do the rest.
 
 Sound your way: the pale water is a bank that will have your keel out of her at speed, and the tinted patches are holding ground where an anchor will bite. Anchored, a spring on the cable still lets you warp round and bring a broadside to bear — but weighing again costs you a turn.
 
 If she strikes, you may as well not come home.`,
     ships: [
-      { type: 'sloop', side: 'friendly', role: 'player', name: 'Alacrity', q: 4, r: 6, facing: 0 },
-      { type: 'merchantman', side: 'friendly', role: 'ward', ai: 'flee', name: 'Marguerite', q: 5, r: 7, facing: 0 },
-      { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Vautour', q: 2, r: 3, facing: 3,
-        stats: { crew: 7, quality: 0.95 } },
-      { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Hirondelle', q: 9, r: -1, facing: 3,
-        stats: { hull: 5, crew: 6, quality: 0.9 } },
+      { type: 'brig', side: 'friendly', role: 'player', name: 'Rattler', q: 4, r: 6, facing: 0 },
+      { type: 'merchantman', side: 'friendly', role: 'ward', ai: 'flee', name: 'Marguerite', q: 5, r: 7, facing: 0,
+        stats: { hull: 14, crew: 9 } },
+      { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Vautour', q: 2, r: 3, facing: 3 },
+    ],
+  },
+  {
+    id: 'retreat',
+    name: 'Fighting Retreat',
+    map: 'gale',
+    objective: { type: 'escape', turnLimit: 12, escapeDist: 7 },
+    briefing:
+`Two of them, to windward, and both faster off the wind than you are. There is no prize here and no glory — only the question of whether the ALACRITY comes home.
+
+Get seven hexes clear of both, or hold them off until dark. Chain shot in their rigging is worth more than round shot in their hulls; a crippled pursuer is one that stops pursuing.
+
+You point higher than either of them. Use it.`,
+    ships: [
+      { type: 'sloop', side: 'friendly', role: 'player', name: 'Alacrity', q: 4, r: 5, facing: 0,
+        stats: { hull: 7, crew: 10 } },
+      { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Furet', q: 3, r: 1, facing: 3 },
+      { type: 'brig', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Insolent', q: 6, r: 0, facing: 3,
+        stats: { crew: 9 } },
+    ],
+  },
+  {
+    id: 'banks',
+    name: 'Over the Banks',
+    map: 'shoals',
+    objective: { type: 'duel', breakOffDist: 10 },
+    briefing:
+`A heavy guarda costa, against eight guns and a hungry crew — and the only reason you are still afloat is that she draws three times the water you do.
+
+Fight her over the banks. She dare not follow you across the shallows, and every hex of broken water between you is a hex her carronades cannot reach across. Cross her bows, cut up her rigging, and let the ground do the rest.
+
+Go aground yourself and it is over.`,
+    ships: [
+      { type: 'sloop', side: 'friendly', role: 'player', name: 'Alacrity', q: 2, r: 8, facing: 0 },
+      { type: 'guardacosta', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Amphitrite', q: 8, r: 1, facing: 3,
+        stats: { hull: 14, crew: 12 } },
     ],
   },
   {
@@ -77,7 +111,27 @@ If she strikes, you may as well not come home.`,
 Round the headland with your battery loaded, and be the one who fires first.`,
     ships: [
       { type: 'sloop', side: 'friendly', role: 'player', name: 'Alacrity', q: 2, r: 8, facing: 0 },
-      { type: 'brig', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Sans Pareil', q: 8, r: 0, facing: 3 },
+      { type: 'brig', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Sans Pareil', q: 8, r: 0, facing: 3,
+        stats: { hull: 9, crew: 9, quality: 0.95 } },
+    ],
+  },
+  {
+    id: 'cutout',
+    name: 'Cutting Out',
+    map: 'bay',
+    objective: { type: 'capture', turnLimit: 14 },
+    briefing:
+`The Spanish brig SANTA RITA lies at anchor in Careenage Bay behind the headland, taking in water. Her people are ashore by half. Cut her out.
+
+She will not run — she cannot, with her anchor down — but a ship at anchor is not helpless: a spring on her cable brings her broadside round as fast as you can cross her stern.
+
+Light airs, a bank on either hand, and holding ground under the headland if you want to bring up and fight it out at anchor yourself. Grapple her and carry her deck before the shore takes notice.`,
+    ships: [
+      { type: 'sloop', side: 'friendly', role: 'player', name: 'Alacrity', q: 1, r: 8, facing: 0 },
+      { type: 'brig', side: 'hostile', role: 'prize', ai: 'engage', name: 'Santa Rita',
+        q: 5, r: 1, facing: 3, anchor: 'down', stats: { crew: 9 } },
+      { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Guarda del puerto',
+        q: 8, r: 4, facing: 0, stats: { hull: 5, crew: 5, quality: 0.8 } },
     ],
   },
 ];

@@ -55,6 +55,21 @@ export const MAPS = {
       ...water('anchorage', [[3, 2], [5, 0], [7, 3], [2, 6], [4, 8]]),
     ],
   },
+  bay: {
+    id: 'bay', name: 'Careenage Bay',
+    cols: 10, rows: 11, scroll: false,
+    wind: { from: 3, speed: 1, shiftEvery: 5 },
+    islands: [
+      // A headland that hides the anchorage until you are round it.
+      ...blob(2, 1, 'tall', [[0, 0], [0, 1], [1, 0], [1, 1]]),
+      ...blob(7, 0, 'low', [[0, 0], [0, 1]]),
+      ...blob(0, 6, 'low', [[0, 0], [1, 0]]),
+    ],
+    water: [
+      ...water('anchorage', [[4, 1], [5, 1], [4, 2], [5, 0], [3, 2], [6, 1]]),
+      ...water('shoal', [[3, 0], [6, 0], [2, 3], [6, 2], [7, 2], [1, 5]]),
+    ],
+  },
   gale: {
     id: 'gale', name: 'Mona Gale',
     cols: 10, rows: 11, scroll: true,

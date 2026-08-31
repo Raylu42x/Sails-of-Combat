@@ -21,13 +21,14 @@ export function createShip(spec) {
     ai: spec.ai || (spec.role === 'player' ? null : 'engage'),
     isYou: spec.role === 'player',
     q: spec.q, r: spec.r, facing: spec.facing || 0,
-    rig: t.rig, speeds: t.speeds, turnMax: t.turnMax, tackOdds: t.tackOdds,
+    rig: t.rig, draught: t.draught || 'medium',
+    speeds: t.speeds, turnMax: t.turnMax, tackOdds: t.tackOdds,
     quality: stat('quality', t.quality),
     hull: stat('hull', t.hull), hullMax: stat('hull', t.hull),
     rigging: stat('rigging', t.rigging), rigMax: stat('rigging', t.rigging),
     crew: stat('crew', t.crew), crewMax: stat('crew', t.crew),
     sails: 'battle', guns, rudderJam: 0, inIrons: false, struck: false,
-    anchor: 'up', grounded: false,
+    anchor: spec.anchor || 'up', grounded: false,
     grappledTo: null, seen: true,
   };
 }

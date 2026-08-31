@@ -46,6 +46,8 @@ Things worth knowing:
   it is blowing. The wind shifts on the map's own schedule.
 - **Tall islands block sight.** An enemy behind one disappears from the chart
   and leaves a dashed last-known bearing behind.
+- **Draught matters.** A sloop creeps over a bank a guarda costa dare not go
+  near, and the enemy captain knows it. Shallow water is a weapon.
 - **Sound your way.** Broken water marks a shoal that will have your keel out
   of her at speed; tinted hexes are holding ground for an anchor. Deep water
   has no bottom to anchor in. At anchor a spring on the cable still answers one
@@ -80,6 +82,7 @@ src/ui/               log, ship cards, order buttons, briefing overlay
 src/styles/           tokens, layout, components
 tests/smoke.mjs       headless run of every scenario
 tests/boarding.mjs    drives 40 boarding actions from alongside
+tests/balance.mjs     win rates per scenario, for tuning
 ```
 
 The core never touches the DOM. It emits events (`log`, `change`, `busy`,
@@ -115,12 +118,15 @@ new case in `src/core/objectives.js`.
 ```bash
 node tests/smoke.mjs
 node tests/boarding.mjs
+node tests/balance.mjs 40      # win rate per scenario, for tuning
 ```
 
 The first plays every scenario 25 times with random orders and a seeded RNG,
 and fails if the rules throw or a fight never reaches a verdict. The second
 lashes two ships together forty times and fights the boarding action out,
-because boarding is hard to reach by chance.
+because boarding is hard to reach by chance. The third plays every level with a
+competent stand-in captain and prints win rates — tuning by feel is how Convoy
+Duty once ended up unwinnable.
 
 ## Docs
 
