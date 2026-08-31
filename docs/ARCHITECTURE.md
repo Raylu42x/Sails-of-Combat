@@ -63,13 +63,36 @@ returns true if any hex strictly between two ships is tall land; the same test
 gates gunfire, the AI's plans, the range readout and whether an enemy is drawn
 at all.
 
-## Gun mounts
+## Gun mounts and charges
 
-A mount is `{ arcs, power, reload, chaser }` on the ship class. `fireAll()`
+A mount is `{ label, tag, arcs, gun, power, reload, chaser }` on the ship class,
+and `gun` names a piece in `GUN_TYPES` that modifies range, weight of metal and
+loading time. A ship's `guns[id]` holds `{ reload, shot }` — the countdown and
+**the charge that is actually in the barrel**. Ordering a different kind of shot
+does not change what a loaded gun fires: `fireAll` makes the crew draw the
+charge instead, which costs a reload. That one rule is why the gun order is a
+commitment rather than a menu. `fireAll()`
 walks every mount that is loaded, finds the nearest enemy inside its arc, in
 range and in sight, and resolves one shot per mount. Broadsides and chasers go
 through the identical path — a chaser is just a mount with `power: 0.5` whose
 arc is `[0]` or `[3]`. Reload counters live per mount in `ship.guns`.
+
+## Depth and ground tackle
+
+`board.depthAt()` returns `deep`, `anchorage` or `shoal`; `anchorable()` and
+`isShoal()` are the two predicates the rest of the game asks. A ship carries
+`anchor` (`up` / `down` / `weighing`) and `grounded`, and `madeFast()` is the
+single test for "going nowhere this turn" that movement, the helm limit and the
+forecast line all share.
+
+## Boarding
+
+`ctx.boarding` is `{ a, b, momentum, round }` and lives only while two ships are
+lashed together. `boardingRound()` takes both captains' commitments, works out
+one contest of strength, applies casualties to both sides, and moves momentum;
+at ±3 the deck is carried and that ship strikes. The AI's commitment is chosen
+in `game.js` from the momentum it can see, so a losing captain stands on the
+defensive.
 
 ## Randomness
 

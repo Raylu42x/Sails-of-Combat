@@ -4,6 +4,8 @@ import { DIRS, between, dist } from './hex.js';
 export function createBoard(map) {
   const terrain = new Map();
   for (const c of map.islands || []) terrain.set(c.q + ',' + c.r, c.height || 'low');
+  const soundings = new Map();
+  for (const c of map.water || []) soundings.set(c.q + ',' + c.r, c.depth || 'deep');
 
   const inBounds = (q, r) => {
     const col = q, row = r + (q - (q & 1)) / 2;
@@ -11,8 +13,14 @@ export function createBoard(map) {
   };
   const landAt = (q, r) => terrain.get(q + ',' + r) || null;
 
+  // 'deep' has no bottom worth anchoring in; 'shoal' can be touched at speed.
+  const depthAt = (q, r) => soundings.get(q + ',' + r) || 'deep';
+
   return {
-    map, terrain, inBounds, landAt,
+    map, terrain, soundings, inBounds, landAt, depthAt,
+    // The lead finds bottom, so the anchor will hold.
+    anchorable: (q, r) => depthAt(q, r) !== 'deep' && !landAt(q, r),
+    isShoal: (q, r) => depthAt(q, r) === 'shoal',
     cols: map.cols, rows: map.rows,
     scrolls: !!map.scroll,
 

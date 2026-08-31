@@ -15,7 +15,10 @@
 <div class="wrap">
   <header>
     <h1>Sails of Combat</h1>
-    <div class="sub" id="turnLabel">Turn 1</div>
+    <div class="headright">
+      <div class="sub" id="turnLabel">Turn 1</div>
+      <button id="mute" class="icon-btn" title="Sound on/off" aria-label="Sound on or off">♪</button>
+    </div>
   </header>
 
   <div id="boardBox"><canvas id="sea"></canvas></div>
@@ -39,7 +42,12 @@
       </div>
       <div class="orow"><span class="lbl">Guns</span>
         <div class="seg" id="segShot">
-          <button data-v="round" class="on">Round 3</button><button data-v="chain">Chain 2</button><button data-v="grape">Grape 1</button><button data-v="double">Dbl 1</button><button data-v="hold">Hold</button>
+          <button data-v="round" class="on">Round</button><button data-v="chain">Chain</button><button data-v="grape">Grape</button><button data-v="double">Double</button><button data-v="hold">Hold</button>
+        </div>
+      </div>
+      <div class="orow"><span class="lbl">Cable</span>
+        <div class="seg" id="segCable">
+          <button data-v="stand" class="on">Stand on</button><button data-v="letgo" id="anchorBtn">Let go anchor</button><button data-v="weigh" id="weighBtn">Weigh anchor</button>
         </div>
       </div>
       <div class="orow"><span class="lbl">Close</span>
@@ -52,14 +60,14 @@
     <div class="orders" id="ordersBoarding" style="display:none">
       <div class="orow"><span class="lbl">Melee</span>
         <div class="seg" id="segMelee">
-          <button data-v="press" class="on">Press!</button><button data-v="holdm">Hold</button><button data-v="back">Fall back</button>
+          <button data-v="press" class="on">All hands</button><button data-v="boarders">Boarders</button><button data-v="hold">Repel</button><button data-v="back">Cut free</button>
         </div>
       </div>
     </div>
 
     <div class="execrow">
       <button id="exec">Make it so</button>
-      <button id="restart">Restart</button>
+      <button id="restart">Levels</button>
     </div>
 
     <div class="log" id="log"></div>
@@ -70,7 +78,10 @@
   <h2 id="bTitle">Sails of Combat</h2>
   <div class="picks" id="bList"></div>
   <p id="bText"></p>
-  <button id="bBtn">Take command</button>
+  <div class="bbtns">
+    <button id="bBtn">Take command</button>
+    <button id="bAlt" style="display:none">Resume action</button>
+  </div>
 </div>
 
 <script type="module" src="src/main.js"></script>

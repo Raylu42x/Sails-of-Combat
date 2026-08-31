@@ -1,8 +1,10 @@
-import { angleOf, dist } from '../core/hex.js';
+import { angleOf, dist, relBearing } from '../core/hex.js';
 import { attOf } from '../core/wind.js';
 import { pathOf } from '../core/movement.js';
-import { simFacing } from '../core/ship.js';
+import { isLoaded, mountsOf, simFacing } from '../core/ship.js';
+import { acceptsShot, rangeOf } from '../core/combat.js';
 import { createLayout } from './layout.js';
+import { sfx } from '../audio/sfx.js';
 
 const css = getComputedStyle(document.documentElement);
 const C = n => css.getPropertyValue(n).trim();
@@ -63,10 +65,13 @@ export function createRenderer(canvas, box, game) {
       if (r.none) { apply(r, log); return; }
       const A = L.px(r.s.q, r.s.r), B = L.px(r.t.q, r.t.r);
       fx.muzzle = { x: A.x, y: A.y, tx: B.x, ty: B.y, t0: now(), life: 200 };
+      sfx.gun(r.chaser ? 0.6 : 1, dist(r.s, r.t));
       await sleepDraw(120);
       await tween(r.chaser ? 180 : 240, k => { fx.tracer = { x1: A.x, y1: A.y, x2: B.x, y2: B.y, k }; });
       fx.tracer = null; fx.muzzle = null;
       apply(r, log);
+      if (r.rake) sfx.rake();
+      else sfx.hit(r.rig && !r.hull ? 'rig' : r.crew && !r.hull ? 'crew' : 'hull');
       const color = r.crew && !r.hull ? C('--signal') : C('--flash');
       addFlash(B.x, B.y, color, !!r.rake || r.shot === 'double');
       if (r.rake || r.shot === 'double') fx.shake = 1;
@@ -78,6 +83,7 @@ export function createRenderer(canvas, box, game) {
       await sleepDraw(r.chaser ? 300 : 400);
     },
     async melee(a, b, res) {
+      sfx.clash();
       const A = shipPx(a), B = shipPx(b);
       addFlash((A.x + B.x) / 2, (A.y + B.y) / 2, C('--signal'), true);
       if (res.bLoss) addFloater(B.x, B.y, '−' + res.bLoss + ' CREW', C('--signal'));
@@ -96,6 +102,29 @@ export function createRenderer(canvas, box, game) {
       k ? cx.lineTo(X, Y) : cx.moveTo(X, Y);
     }
     cx.closePath();
+  }
+
+  function drawSoundings(ctx) {
+    for (const cell of ctx.map.water || []) {
+      const p = L.px(cell.q, cell.r);
+      if (cell.depth === 'shoal') {
+        // Broken water over the bank.
+        cx.strokeStyle = C('--shoal'); cx.lineWidth = 1;
+        for (let i = -1; i <= 1; i++) {
+          const y = p.y + i * L.S * 0.32;
+          cx.beginPath();
+          for (let k = -3; k <= 3; k++) {
+            const x = p.x + k * L.S * 0.14;
+            k === -3 ? cx.moveTo(x, y) : cx.lineTo(x, y + (k % 2 ? L.S * 0.06 : -L.S * 0.06));
+          }
+          cx.stroke();
+        }
+      } else if (cell.depth === 'anchorage') {
+        hexPath(p, 0.96);
+        cx.fillStyle = C('--anchorage');
+        cx.fill();
+      }
+    }
   }
 
   function drawTerrain(ctx) {
@@ -147,17 +176,35 @@ export function createRenderer(canvas, box, game) {
       cx.lineWidth = 2;
       const mark = (id, x1, x2, y) => {
         if (!(id in s.guns)) return;
-        cx.strokeStyle = s.guns[id] === 0 ? C('--flash') : C('--chart');
+        cx.strokeStyle = s.guns[id].reload === 0 ? C('--flash') : C('--chart');
         cx.beginPath(); cx.moveTo(x1, y); cx.lineTo(x2, y); cx.stroke();
       };
       mark('stbd', -Lh * 0.55, Lh * 0.15, W2 + 3.5);
       mark('port', -Lh * 0.55, Lh * 0.15, -W2 - 3.5);
+      mark('stbdSw', -Lh * 0.2, Lh * 0.15, W2 + 6.5);
+      mark('portSw', -Lh * 0.2, Lh * 0.15, -W2 - 6.5);
       mark('bow', Lh * 0.6, Lh * 0.95, 0);
       mark('stern', -Lh * 1.05, -Lh * 0.9, 0);
     }
     cx.globalAlpha = 1;
     cx.restore();
-    const tag = s.struck ? 'STRUCK' : s.inIrons ? 'IN IRONS' : null;
+    // Ground tackle, drawn where the cable would be: down from her bows.
+    if (s.anchor !== 'up' || s.grounded) {
+      cx.save();
+      cx.strokeStyle = s.grounded ? C('--signal') : C('--flash');
+      cx.lineWidth = 1.5;
+      cx.setLineDash([3, 2]);
+      cx.beginPath();
+      cx.moveTo(p.x, p.y);
+      cx.lineTo(p.x + L.S * 0.5, p.y + L.S * 0.5);
+      cx.stroke();
+      cx.setLineDash([]);
+      cx.beginPath();
+      cx.arc(p.x + L.S * 0.55, p.y + L.S * 0.55, L.S * 0.1, 0, Math.PI * 2);
+      cx.stroke();
+      cx.restore();
+    }
+    const tag = s.struck ? 'STRUCK' : s.grounded ? 'AGROUND' : s.inIrons ? 'IN IRONS' : null;
     if (tag) {
       cx.fillStyle = C('--flash');
       cx.font = '700 10px "Barlow Condensed", sans-serif';
@@ -174,6 +221,31 @@ export function createRenderer(canvas, box, game) {
     const path = inIrons ? [] : pathOf(you, ctx, { facing: f, sails: orders.sails, inIrons });
     cx.fillStyle = 'rgba(217,164,65,0.16)';
     for (const c of path) { hexPath(L.px(c.q, c.r)); cx.fill(); }
+    drawArcs(ctx, path.length ? path[path.length - 1] : you, f);
+  }
+
+  // Where the guns will bear from where this turn's orders leave her: only the
+  // batteries that are loaded with the charge you have ordered, since a gun
+  // holding something else has to be drawn first.
+  function drawArcs(ctx, from, facing) {
+    const you = ctx.you;
+    const orders = game.getOrders();
+    if (orders.shot === 'hold' || orders.sails === 'full') return;
+    for (const [id, mount] of mountsOf(you)) {
+      if (!isLoaded(you, id) || !acceptsShot(mount, orders.shot)) continue;
+      if (you.guns[id].shot !== orders.shot) continue;
+      const range = rangeOf(mount, orders.shot);
+      cx.fillStyle = mount.chaser ? 'rgba(242,233,216,0.07)' : 'rgba(242,233,216,0.05)';
+      for (const c of ctx.board.cells()) {
+        const d = dist(from, c);
+        if (d < 1 || d > range) continue;
+        if (!mount.arcs.includes(relBearing(from, c, facing))) continue;
+        if (ctx.board.landAt(c.q, c.r)) continue;
+        if (ctx.board.sightBlocked(from, c)) continue;
+        hexPath(L.px(c.q, c.r), 0.9);
+        cx.fill();
+      }
+    }
   }
 
   function drawRangeLine(ctx, target) {
@@ -225,6 +297,7 @@ export function createRenderer(canvas, box, game) {
 
     cx.strokeStyle = C('--chart-dim'); cx.lineWidth = 1;
     for (const c of ctx.board.cells()) { hexPath(L.px(c.q, c.r)); cx.stroke(); }
+    drawSoundings(ctx);
     drawTerrain(ctx);
 
     const idle = !ctx.over && !ctx.busy && !ctx.you.grappledTo && !ctx.you.struck;

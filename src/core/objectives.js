@@ -43,11 +43,39 @@ export function evaluate(ctx) {
       }
       if (!hostiles.length) {
         return { done: true, won: true, title: 'Convoy Safe',
-          text: 'Both privateers are beaten off. The ' + ward.name + ' swims, and so do you.' };
+          text: 'The privateer is beaten off. The ' + ward.name + ' swims, and so do you.' };
       }
       if (obj.turnLimit && turn > obj.turnLimit) {
         return { done: true, won: true, title: 'Convoy Safe',
-          text: 'The anchorage guns open up over your masthead. The privateers haul their wind.' };
+          text: 'The anchorage guns open up over your masthead. The privateer hauls his wind.' };
+      }
+      return null;
+    }
+    case 'capture': {
+      const prize = ships.find(s => s.role === 'prize');
+      if (prize && prize.struck) {
+        return { done: true, won: true, title: 'Cut Out',
+          text: 'The ' + prize.name + ' is yours. Cut her cable, set the topsails, and take her out under the guns of the shore.' };
+      }
+      if (obj.turnLimit && turn > obj.turnLimit) {
+        return { done: true, won: false, title: 'The Alarm Is Given',
+          text: 'Lights along the shore and drums beating to quarters. Whatever was worth cutting out is worth nothing now.' };
+      }
+      return null;
+    }
+    case 'escape': {
+      const clear = hostiles.every(h => dist(you, h) >= (obj.escapeDist || 7));
+      if (clear && hostiles.length) {
+        return { done: true, won: true, title: 'Clear Away',
+          text: 'The gunfire falls astern. You have your ship, your people, and the weather gage of a bad morning.' };
+      }
+      if (!hostiles.length) {
+        return { done: true, won: true, title: 'Beat Them Off',
+          text: 'Against every reasonable expectation, you have beaten them off outright.' };
+      }
+      if (obj.turnLimit && turn > obj.turnLimit) {
+        return { done: true, won: true, title: 'Nightfall',
+          text: 'Darkness comes down and hides you. They will not find you again tonight.' };
       }
       return null;
     }
@@ -76,7 +104,7 @@ export function evaluate(ctx) {
 export function checkStrike(s, ctx) {
   if (s.struck) return false;
   if (s.hull <= 0) { s.struck = true; return true; }
-  if (s.crew <= 2) { s.struck = true; return true; }
+  if (s.crew <= 0) { s.struck = true; return true; } // not a soul left to fight her
   if (s.isYou) return false;
   const hullF = s.hull / s.hullMax, crewF = s.crew / s.crewMax, rigF = s.rigging / s.rigMax;
   const beaten = hullF <= 0.25 || crewF <= 0.25 || (rigF <= 0.15 && hullF <= 0.6);

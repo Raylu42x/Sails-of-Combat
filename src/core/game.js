@@ -2,10 +2,10 @@ import { createEmitter } from './events.js';
 import { dist, unitPos } from './hex.js';
 import { setSeed, chance } from './rng.js';
 import { createBoard } from './board.js';
-import { applyHelm, createShip, mountsOf } from './ship.js';
+import { applyHelm, createShip, crewFrac, madeFast, mountsOf } from './ship.js';
 import { attOf, maybeShift, windLabel } from './wind.js';
 import { moveShips } from './movement.js';
-import { applyFireResult, fireAll, meleeRound, tryGrapple } from './combat.js';
+import { applyFireResult, boardingRound, fireAll, startBoarding, tryGrapple } from './combat.js';
 import { aiOrders, aiWantsGrapple } from './ai.js';
 import { checkStrike, evaluate } from './objectives.js';
 import { mapById } from '../data/maps.js';
@@ -15,7 +15,7 @@ import { scenarioById } from '../data/scenarios.js';
 // events for the UI and calls a `view` adapter for anything that takes time.
 export function createGame(view) {
   const bus = createEmitter();
-  const orders = { helm: 0, sails: 'battle', shot: 'round', grapple: 'no', melee: 'press' };
+  const orders = { helm: 0, sails: 'battle', shot: 'round', grapple: 'no', melee: 'press', cable: 'stand' };
   const log = (msg, cls) => bus.emit('log', { msg, cls });
 
   let ctx = null;
@@ -31,7 +31,7 @@ export function createGame(view) {
       turn: 1, over: false, busy: false, log,
       you: ships.find(s => s.isYou),
     };
-    Object.assign(orders, { helm: 0, sails: 'battle', shot: 'round', grapple: 'no', melee: 'press' });
+    Object.assign(orders, { helm: 0, sails: 'battle', shot: 'round', grapple: 'no', melee: 'press', cable: 'stand' });
     bus.emit('reset', ctx);
     log(scenario.name + ' — ' + map.name + '. ' + windLabel(wind) + '.', 'turnhead');
     log('Set your orders, Captain, then MAKE IT SO.');
@@ -67,23 +67,64 @@ export function createGame(view) {
     return { dq, dr, x: u.x - u0.x, y: u.y - u0.y };
   }
 
+  // Letting go is quick; weighing costs the turn. Neither can be done aground.
+  function handleCable(s, cmd) {
+    if (s.grounded || s.grappledTo) return;
+    if (cmd === 'letgo' && s.anchor === 'up') {
+      if (!ctx.board.anchorable(s.q, s.r)) {
+        log('No bottom here — the lead finds no ground for an anchor.', 'you');
+        return;
+      }
+      s.anchor = 'down';
+      log(s.name + ' lets go the best bower and brings up.', s.isYou ? 'you' : 'foe');
+    } else if (cmd === 'weigh' && s.anchor === 'down') {
+      s.anchor = 'weighing';
+      log('Hands to the capstan — the anchor is coming home. She lies still this turn.', 'you');
+    }
+  }
+
+  // How far the helm will answer: hard over under way, one point on a spring
+  // at anchor, and not at all with her keel in the sand.
+  function helmLimit(s) {
+    if (s.grounded) return 0;
+    if (s.anchor !== 'up') return 1;
+    return s.turnMax;
+  }
+
   function endOfTurn() {
     for (const s of ctx.ships) {
       if (s.struck) continue;
-      if (s.sails === 'takein' && s.rigging < s.rigMax && chance(0.9)) {
+      if (s.sails === 'takein' && s.rigging < s.rigMax && chance(0.35 + 0.55 * crewFrac(s))) {
         s.rigging += 1;
         log(s.name + '’s topmen knot and splice — rigging repaired.', s.isYou ? 'you' : 'foe');
       }
-      for (const [id] of mountsOf(s)) {
-        if (s.guns[id] > 0) {
-          s.guns[id] -= 1;
-          if (s.guns[id] === 0 && s.isYou) log('Your ' + id + ' battery is loaded and run out.', 'you');
+      for (const [id, mount] of mountsOf(s)) {
+        const g = s.guns[id];
+        if (g.reload > 0) {
+          g.reload -= 1;
+          if (g.reload === 0 && s.isYou) {
+            log('Your ' + (mount.label || id) + ' is loaded with ' + g.shot + ' and run out.', 'you');
+          }
         }
       }
       if (s.rudderJam > 0) s.rudderJam -= 1;
+      if (s.anchor === 'weighing') {
+        s.anchor = 'up';
+        log(s.name + '’s anchor is catted — she is under way again.', s.isYou ? 'you' : 'foe');
+      }
+      if (s.grounded) {
+        // Lay out a kedge, run the guns aft, and hope. Hands and slack canvas help.
+        const odds = 0.15 + 0.3 * crewFrac(s) + (s.sails === 'takein' ? 0.2 : 0);
+        if (chance(odds)) {
+          s.grounded = false;
+          log(s.name + ' warps off the shoal and floats free.', s.isYou ? 'you' : 'foe');
+        } else if (s.isYou) {
+          log('Still fast aground — she will not budge.', 'foe');
+        }
+      }
     }
     for (const s of ctx.ships) {
-      if (checkStrike(s, ctx)) log(s.name + ' strikes her colours!', 'big');
+      if (checkStrike(s, ctx)) { log(s.name + ' strikes her colours!', 'big'); bus.emit('struck', s); }
     }
     const shift = maybeShift(ctx.wind, ctx.turn);
     if (shift) {
@@ -93,6 +134,7 @@ export function createGame(view) {
     }
     ctx.turn += 1;
     log('— Turn ' + ctx.turn + ' —', 'turnhead');
+    bus.emit('turn', ctx.turn);
   }
 
   function finish(verdict) {
@@ -111,29 +153,61 @@ export function createGame(view) {
 
     if (you.grappledTo) {
       const foe = you.grappledTo;
-      const res = meleeRound(you, foe, orders.melee, log);
+      if (!ctx.boarding || ctx.boarding.a !== you || ctx.boarding.b !== foe) {
+        ctx.boarding = startBoarding(you, foe);
+      }
+      // The enemy captain reads the fight: press home while winning, stand on
+      // the defensive while losing, and only a beaten ship tries to cut free.
+      const m = ctx.boarding.momentum;
+      const foeAct = m <= -2 ? 'press' : m >= 2 ? 'hold' : (crewFrac(foe) < 0.4 ? 'hold' : 'boarders');
+      const res = boardingRound(ctx.boarding, you, foe, orders.melee, foeAct, log);
       await view.melee(you, foe, res);
-      for (const s of [you, foe]) if (checkStrike(s, ctx)) log(s.name + ' strikes her colours!', 'big');
+      if (res.parted) ctx.boarding = null;
+      if (res.carried) {
+        res.carried.struck = true;
+        res.carried.grappledTo = null;
+        (res.carried === foe ? you : foe).grappledTo = null;
+        ctx.boarding = null;
+        log(res.carried === foe
+          ? 'Her quarterdeck is carried — the colours come down and the ship is yours!'
+          : 'They have carried your quarterdeck. The Alacrity is taken.', 'big');
+        bus.emit('struck', res.carried);
+      }
+      for (const s of [you, foe]) if (checkStrike(s, ctx)) { log(s.name + ' strikes her colours!', 'big'); bus.emit('struck', s); }
     } else {
       const shift = recenter();
       you.sails = orders.sails;
       for (const s of acting) s.sails = aiPlan.get(s.uid).sails;
 
+      handleCable(you, orders.cable);
       const from = new Map(ctx.ships.map(s => [s.uid, { q: s.q, r: s.r }]));
-      applyHelm(you, orders.helm, ctx.wind, log);
-      for (const s of acting) applyHelm(s, aiPlan.get(s.uid).helm, ctx.wind, log);
+      const lim = helmLimit(you);
+      const helm = Math.max(-lim, Math.min(lim, orders.helm));
+      if (madeFast(you) && helm !== 0 && !you.grounded) {
+        log('A spring on the cable warps her round to bring the guns to bear.', 'you');
+      }
+      applyHelm(you, helm, ctx.wind, log);
+      for (const s of acting) {
+        const l = helmLimit(s);
+        applyHelm(s, Math.max(-l, Math.min(l, aiPlan.get(s.uid).helm)), ctx.wind, log);
+      }
       const paths = moveShips(ctx, log);
       await view.animateMoves(from, paths, shift);
 
-      if (orders.grapple === 'yes') tryGrapple(you, ctx, true, log);
-      for (const s of acting) if (aiWantsGrapple(s, ctx)) tryGrapple(s, ctx, false, log);
+      let hooked = orders.grapple === 'yes' ? tryGrapple(you, ctx, true, log) : null;
+      for (const s of acting) if (aiWantsGrapple(s, ctx)) hooked = tryGrapple(s, ctx, false, log) || hooked;
+      if (hooked) {
+        // The fight for the deck runs from here until one side carries it.
+        if (you.grappledTo) ctx.boarding = startBoarding(you, you.grappledTo);
+        bus.emit('grappled', hooked);
+      }
 
       const results = [];
       fireAll(you, ctx, orders.shot, results);
       for (const s of acting) fireAll(s, ctx, aiPlan.get(s.uid).shot, results);
       for (const r of results) {
         await view.animateShot(r, applyFireResult, log);
-        if (r.t && checkStrike(r.t, ctx)) log(r.t.name + ' strikes her colours!', 'big');
+        if (r.t && checkStrike(r.t, ctx)) { log(r.t.name + ' strikes her colours!', 'big'); bus.emit('struck', r.t); }
         bus.emit('change', ctx);
       }
     }

@@ -1,7 +1,9 @@
 import { angleOf, dist, relBearing } from './hex.js';
 import { rnd } from './rng.js';
 import { attOf } from './wind.js';
-import { mountsOf } from './ship.js';
+import { isLoaded, mountsOf } from './ship.js';
+import { draughtOf } from '../data/ships.js';
+import { acceptsShot, rangeOf } from './combat.js';
 import { pathOf } from './movement.js';
 
 const nearestEnemy = (s, ctx) => ctx.ships
@@ -39,7 +41,7 @@ export function aiOrders(s, ctx) {
       // Can anything shoot from there?
       let armed = false;
       for (const [id, m] of mountsOf(s)) {
-        if (s.guns[id] !== 0) continue;
+        if (!isLoaded(s, id)) continue;
         if (m.arcs.includes(relBearing(pos, foe, f))) armed = true;
       }
       if (mood === 'flee') {
@@ -58,6 +60,8 @@ export function aiOrders(s, ctx) {
         if (sails === 'takein') score -= 2;
       }
       if (ctx.board.shotBlocked(pos, foe)) score += mood === 'flee' ? 3 : -3; // land in the way
+      // A deep-draught ship will not follow a sloop over a bank, and knows it.
+      if (ctx.board.isShoal(pos.q, pos.r)) score -= 5 * draughtOf(s);
       if (attOf(f, wind.from) === 0) score -= 100;
       // A nudge to keep the weather gage (or run off before it, when fleeing).
       const gage = ((foe.q - pos.q) * 1.5 * wv.x + (foe.r - pos.r) * 1.5 * wv.y) * (mood === 'flee' ? 0.03 : -0.06);
@@ -71,6 +75,14 @@ export function aiOrders(s, ctx) {
   if (mood === 'flee') shot = best.endDist <= 2 ? 'chain' : 'round';
   else if (best.endDist <= 1) shot = foe.crew / foe.crewMax > 0.45 ? 'grape' : 'double';
   else if (best.endDist <= 2 && foe.rigging / foe.rigMax > 0.45 && ctx.turn <= 6) shot = 'chain';
+
+  // Drawing a good charge to load a better one wastes the turn that matters.
+  // If something is loaded and will bear, fire what is in the gun.
+  const readyNow = mountsOf(s)
+    .filter(([id, m]) => isLoaded(s, id) && acceptsShot(m, s.guns[id].shot) &&
+      best.endDist <= rangeOf(m, s.guns[id].shot))
+    .map(([id]) => s.guns[id].shot);
+  if (readyNow.length && !readyNow.includes(shot)) shot = readyNow[0];
   return { helm: best.helm, sails: best.sails, shot };
 }
 

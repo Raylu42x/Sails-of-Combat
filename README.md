@@ -23,26 +23,45 @@ Each turn you set four orders and press **Make it so**:
 | --- | --- |
 | **Helm** | Turn one or two points to port or starboard. Turning through the eye of the wind is a tack — a fore-and-aft rig usually makes it, a square rig often misses stays and is caught **in irons**. |
 | **Sails** | *Full* is fastest but sends the gun crews aloft, so the guns stay silent. *Battle* is the fighting sail. *Take in* is slow but lets the topmen repair rigging. |
-| **Guns** | *Round* hulls her at long range, *chain* cuts her rigging, *grape* kills crew up close, *double* is a short-range hull-smasher that reloads slowly. *Hold* keeps the batteries loaded. |
-| **Close** | Grapple and board when you are alongside — then it is crew against crew. |
+| **Guns** | *Round* hulls her, *chain* cuts her rigging, *grape* kills crew up close, *double* is a short-range hull-smasher that reloads slowly. *Hold* keeps what is in the barrels. **A loaded gun cannot fire a different charge** — order another kind and the crews must draw the charge and load afresh, which costs a reload. |
+| **Cable** | Let go the anchor where the lead finds bottom, or weigh it again — which costs a whole turn. |
+| **Close** | Grapple and board when you are alongside. Then choose how much of the crew to commit: *all hands*, the *boarding party* alone, *repel* on the defensive, or *cut free*. |
+
+Keyboard: arrows for helm and sail, 1–5 for shot, space to give the order,
+**L** for levels, **M** for sound.
 
 Things worth knowing:
 
-- **Guns fire as they bear.** Each battery has its own arc and its own reload
-  clock. A ship with bow or stern chasers can fire them in the same turn as a
-  broadside, which is what makes a stern chase worth sailing.
+- **Guns fire as they bear.** Each battery has its own arc, its own charge and
+  its own reload clock. A ship with bow or stern chasers can fire them in the
+  same turn as a broadside, which is what makes a stern chase worth sailing.
+  The pale hexes on the chart are where your loaded guns will bear after the
+  orders you have set.
+- **The pieces differ.** Long guns reach a hex further; carronades hit far
+  harder a hex closer; swivels take grape and nothing else, at one hex — and
+  fire into boarders as they come over the rail.
 - **Raking wins fights.** Crossing an enemy's bow does 1.5× damage; crossing
   her stern does 2× and may shoot away her rudder.
 - **Wind is everything.** Speed depends on your point of sail and on how hard
   it is blowing. The wind shifts on the map's own schedule.
 - **Tall islands block sight.** An enemy behind one disappears from the chart
   and leaves a dashed last-known bearing behind.
+- **Draught matters.** A sloop creeps over a bank a guarda costa dare not go
+  near, and the enemy captain knows it. Shallow water is a weapon.
+- **Sound your way.** Broken water marks a shoal that will have your keel out
+  of her at speed; tinted hexes are holding ground for an anchor. Deep water
+  has no bottom to anchor in. At anchor a spring on the cable still answers one
+  point of helm, so you can warp round and bring a fresh broadside to bear.
+- **Crew losses tell before she strikes.** Under half the ship's complement she
+  is short-handed and slow to reload; under a quarter she cannot carry full
+  sail. She is only lost when there is nobody left to fight her.
 
 ## Project layout
 
 ```
 index.html            markup only
 src/main.js           wires the pieces together
+src/audio/sfx.js      synthesised sound — no asset files
 src/core/             the rules — no DOM anywhere in here
   hex.js              hex maths, distance, bearings, sight lines
   rng.js              the one source of randomness (seedable)
@@ -62,6 +81,8 @@ src/render/           canvas layout and drawing
 src/ui/               log, ship cards, order buttons, briefing overlay
 src/styles/           tokens, layout, components
 tests/smoke.mjs       headless run of every scenario
+tests/boarding.mjs    drives 40 boarding actions from alongside
+tests/balance.mjs     win rates per scenario, for tuning
 ```
 
 The core never touches the DOM. It emits events (`log`, `change`, `busy`,
@@ -74,18 +95,21 @@ does.
 **A new ship class** — add an entry to `src/data/ships.js`. `speeds` is hexes
 made good at each point of sail (in irons, close-hauled, reaching, running).
 `mounts` are gun groups; `arcs` are bearings relative to the bow, where 0 is
-dead ahead, 1 and 2 are starboard, 3 is dead astern, 4 and 5 are port. Give a
-mount `power` below 1 and it is a light chaser; above 1 and it is a heavy
-battery.
+dead ahead, 1 and 2 are starboard, 3 is dead astern, 4 and 5 are port. `gun`
+picks the piece from `GUN_TYPES` (long, medium, carronade, swivel) and `power`
+scales the weight of metal on top of it.
 
 **A new map** — add an entry to `src/data/maps.js`: size, wind direction and
-strength, and a list of island hexes with `height: 'low'` (blocks passage) or
-`'tall'` (blocks passage and sight). Set `scroll: true` for open water, where
+strength, a list of island hexes with `height: 'low'` (blocks passage) or
+`'tall'` (blocks passage and sight), and a list of `water` hexes with
+`depth: 'anchorage'` (holding ground) or `'shoal'` (shallow enough to touch). Set `scroll: true` for open water, where
 the chart slides to keep the fight centred, or `false` for fixed waters where
 the land has to stay put.
 
 **A new level** — add an entry to `src/data/scenarios.js`: a map, a list of
-ships with sides and roles, an objective, and the briefing text. Objectives
+ships with sides and roles, an objective, and the briefing text. Any ship may
+carry a `stats` override for hull, rigging, crew or quality, which is how a
+level is made harder or easier without inventing a ship class. Objectives
 that exist today are `duel`, `chase`, `protect` and `survive`; a new type is a
 new case in `src/core/objectives.js`.
 
@@ -93,13 +117,20 @@ new case in `src/core/objectives.js`.
 
 ```bash
 node tests/smoke.mjs
+node tests/boarding.mjs
+node tests/balance.mjs 40      # win rate per scenario, for tuning
 ```
 
-Plays every scenario 25 times with random orders and a seeded RNG, and fails if
-the rules throw or a fight never reaches a verdict.
+The first plays every scenario 25 times with random orders and a seeded RNG,
+and fails if the rules throw or a fight never reaches a verdict. The second
+lashes two ships together forty times and fights the boarding action out,
+because boarding is hard to reach by chance. The third plays every level with a
+competent stand-in captain and prints win rates — tuning by feel is how Convoy
+Duty once ended up unwinnable.
 
 ## Docs
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the pieces fit together
 - [docs/ROADMAP.md](docs/ROADMAP.md) — what to build next, and why
+- [docs/IDEAS.md](docs/IDEAS.md) — the unfiltered idea bank behind the roadmap
 - [docs/decisions/](docs/decisions/) — decision records

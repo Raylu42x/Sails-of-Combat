@@ -4,6 +4,7 @@ import { createHud } from './ui/hud.js';
 import { createLog } from './ui/log.js';
 import { createOrders } from './ui/orders.js';
 import { createBanner } from './ui/banner.js';
+import { sfx } from './audio/sfx.js';
 
 const canvas = document.getElementById('sea');
 const box = document.getElementById('boardBox');
@@ -45,24 +46,44 @@ game.on('reset', ctx => {
 game.on('change', refresh);
 game.on('busy', busy => { execBtn.disabled = busy || game.state().over; });
 game.on('finished', v => banner.showVerdict(v));
+game.on('turn', () => sfx.bell());
+game.on('struck', () => sfx.strike());
+game.on('grappled', () => sfx.grapple());
 
 function startScenario(id) {
   game.start(id);
+  banner.setCurrent(game.state().scenario);
   execBtn.disabled = false;
   refresh();
 }
 
-execBtn.addEventListener('pointerdown', () => game.execute());
+execBtn.addEventListener('pointerdown', () => { sfx.wake(); game.execute(); });
+// LEVELS opens the picker over the action: abandon it, restart it, or go back.
 document.getElementById('restart').addEventListener('pointerdown', () => {
   const ctx = game.state();
   if (!ctx || ctx.busy) return;
-  startScenario(ctx.scenario.id);
+  sfx.click();
+  banner.showPicker();
 });
 
-let resizeTimer = null;
+const muteBtn = document.getElementById('mute');
+const paintMute = () => {
+  muteBtn.textContent = sfx.muted ? '♪̸' : '♪';
+  muteBtn.classList.toggle('off', sfx.muted);
+};
+muteBtn.addEventListener('pointerdown', () => { sfx.toggleMute(); if (!sfx.muted) sfx.click(); paintMute(); });
+paintMute();
+
+// Audio cannot start until the user has touched the page.
+window.addEventListener('pointerdown', () => sfx.wake(), { once: true });
+
+// Setting canvas.width clears the bitmap, so redraw in the same frame as the
+// resize — a debounce here leaves the chart blank while the window settles.
+let resizePending = false;
 const onResize = () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => { renderer.resize(); refresh(); }, 60);
+  if (resizePending) return;
+  resizePending = true;
+  requestAnimationFrame(() => { resizePending = false; renderer.resize(); refresh(); });
 };
 window.addEventListener('resize', onResize);
 window.addEventListener('orientationchange', onResize);
@@ -72,6 +93,32 @@ game.start(banner.pending.id);
 renderer.resize();
 refresh();
 banner.showBriefing(banner.pending);
+
+// Keyboard orders: the helm on the arrows, shot on the number keys, space to
+// give the order. Cheap to add, and the whole game becomes playable one-handed.
+const SHOT_KEYS = { '1': 'round', '2': 'chain', '3': 'grape', '4': 'double', '5': 'hold' };
+window.addEventListener('keydown', ev => {
+  const ctx = game.state();
+  if (!ctx || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  const banner = document.getElementById('banner');
+  if (banner.classList.contains('show')) return;
+  const orders = game.getOrders();
+  let handled = true;
+  switch (ev.key) {
+    case 'ArrowLeft':  game.setOrder('helm', String(Math.max(-ctx.you.turnMax, orders.helm - 1))); break;
+    case 'ArrowRight': game.setOrder('helm', String(Math.min(ctx.you.turnMax, orders.helm + 1))); break;
+    case 'ArrowUp':    game.setOrder('sails', orders.sails === 'takein' ? 'battle' : 'full'); break;
+    case 'ArrowDown':  game.setOrder('sails', orders.sails === 'full' ? 'battle' : 'takein'); break;
+    case ' ': case 'Enter': sfx.wake(); game.execute(); break;
+    case 'l': case 'L': if (!ctx.busy) banner_showPicker(); break;
+    case 'm': case 'M': sfx.toggleMute(); paintMute(); break;
+    default:
+      if (SHOT_KEYS[ev.key]) game.setOrder('shot', SHOT_KEYS[ev.key]);
+      else handled = false;
+  }
+  if (handled) { ev.preventDefault(); refresh(); }
+});
+const banner_showPicker = () => banner.showPicker();
 
 // Debug handle: `__soc.game.state()` in the console while testing.
 window.__soc = { game, renderer };
