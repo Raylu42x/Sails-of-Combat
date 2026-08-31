@@ -28,7 +28,12 @@ Each turn you set four orders and press **Make it so**:
 | **Close** | Grapple and board when you are alongside. Then choose how much of the crew to commit: *all hands*, the *boarding party* alone, *repel* on the defensive, or *cut free*. |
 
 Keyboard: arrows for helm and sail, 1–5 for shot, space to give the order,
-**L** for levels, **M** for sound.
+**L** for levels, **M** for sound, **D** for soundings, **G** for gun arcs.
+
+**Layers**, top right of the chart, turns the overlays on and off — soundings,
+gun arcs, your track for this turn, and the range line — and remembers what you
+chose. Open water has no soundings to show, and the menu says so rather than
+leaving you wondering.
 
 Things worth knowing:
 

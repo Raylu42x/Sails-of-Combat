@@ -4,6 +4,7 @@ import { createHud } from './ui/hud.js';
 import { createLog } from './ui/log.js';
 import { createOrders } from './ui/orders.js';
 import { createBanner } from './ui/banner.js';
+import { createLayers } from './ui/layers.js';
 import { sfx } from './audio/sfx.js';
 
 const canvas = document.getElementById('sea');
@@ -21,7 +22,8 @@ const view = {
 };
 
 const game = createGame(view);
-renderer = createRenderer(canvas, box, game);
+const layers = createLayers(box, () => renderer.draw());
+renderer = createRenderer(canvas, box, game, layers);
 
 const logView = createLog(document.getElementById('log'));
 const hud = createHud(document.getElementById('ships'), document.getElementById('turnLabel'), game);
@@ -38,6 +40,7 @@ function refresh() {
 
 game.on('log', ({ msg, cls }) => logView.write(msg, cls));
 game.on('reset', ctx => {
+  layers.describe(ctx);
   logView.clear();
   renderer.clearMemory();
   hud.build(ctx);
@@ -112,6 +115,8 @@ window.addEventListener('keydown', ev => {
     case ' ': case 'Enter': if (!execBtn.disabled) { sfx.wake(); game.execute(); } break;
     case 'l': case 'L': if (!ctx.busy) banner_showPicker(); break;
     case 'm': case 'M': sfx.toggleMute(); paintMute(); break;
+    case 'd': case 'D': layers.toggle('depth'); break;
+    case 'g': case 'G': layers.toggle('arcs'); break;
     default:
       if (SHOT_KEYS[ev.key]) game.setOrder('shot', SHOT_KEYS[ev.key]);
       else handled = false;

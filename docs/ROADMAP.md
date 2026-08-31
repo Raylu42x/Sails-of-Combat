@@ -99,6 +99,8 @@ Raised 2026-08-30 and built the same day:
   spring on the cable, shoals that ground you at speed.
 - Boarding as a running fight for the deck with committed crews and momentum.
 - Gun-arc overlay and keyboard orders.
+- A layers control on the chart: soundings, arcs, track and range line, each
+  remembered between visits.
 - Per-scenario stat overrides, so difficulty is tuned in data.
 - Draught: shallow, medium and deep hulls, so a bank is cover from a big ship.
 - Seven levels, ordered easiest to hardest, using every system above.
