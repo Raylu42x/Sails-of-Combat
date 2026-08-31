@@ -23,7 +23,7 @@ Each turn you set four orders and press **Make it so**:
 | --- | --- |
 | **Helm** | Turn one or two points to port or starboard. Turning through the eye of the wind is a tack — a fore-and-aft rig usually makes it, a square rig often misses stays and is caught **in irons**. |
 | **Sails** | *Full* is fastest but sends the gun crews aloft, so the guns stay silent. *Battle* is the fighting sail. *Take in* is slow but lets the topmen repair rigging. |
-| **Guns** | *Round* hulls her, *chain* cuts her rigging, *grape* kills crew up close, *double* is a short-range hull-smasher that reloads slowly. *Hold* keeps what is in the barrels. **A loaded gun cannot fire a different charge** — order another kind and the crews must draw the charge and load afresh, which costs a reload. |
+| **Guns** | *Round* hulls her, *chain* cuts her rigging, *grape* kills crew up close, *double* is a short-range hull-smasher that reloads slowly. *Hold* keeps what is in the barrels. **A loaded gun cannot fire a different charge** — order another kind and the crews draw the charge and reload, which costs one turn (two for double shot). Guns with nothing in range keep what they are holding, so choosing grape early never dumps your round shot. |
 | **Cable** | Let go the anchor where the lead finds bottom, or weigh it again — which costs a whole turn. |
 | **Close** | Grapple and board when you are alongside. Then choose how much of the crew to commit: *all hands*, the *boarding party* alone, *repel* on the defensive, or *cut free*. |
 
