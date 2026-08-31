@@ -72,6 +72,8 @@
   padding: 7px 12px; border: 1px solid var(--chart); background: transparent; color: var(--ink-dim); cursor: pointer;
 }
 .banner .pick.on { border-color: var(--brass); color: var(--brass); }
+.banner .pick.won { color: var(--ink); border-color: var(--ink-dim); }
+.banner .pick.won.on { color: var(--brass); border-color: var(--brass); }
 .banner .bbtns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 .banner #bAlt {
   font-size: var(--ui-md); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;

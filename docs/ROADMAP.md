@@ -12,9 +12,9 @@ what it touches so the cost is visible before anyone starts.
 1. **More levels.** The engine already supports duel, chase, protect and
    survive. Four scenarios is a demo; twelve is a game. *Touches:
    `data/scenarios.js` only.*
-2. **Level select that remembers progress.** Scenario list is already in the
-   overlay; store completions in `localStorage` and unlock in order. *Touches:
-   `ui/banner.js`, one small store module.*
+2. ~~**Level select that remembers progress.**~~ Done: levels you have taken
+   are marked in the picker and remembered in `localStorage`
+   (`src/ui/progress.js`). Unlocking in order is still open, if we want it.
 3. **Difficulty per level.** Enemy `quality` and crew are already ship-class
    fields; let a scenario override them. *Touches: `data/scenarios.js`,
    `core/ship.js` (accept overrides in `createShip`).*

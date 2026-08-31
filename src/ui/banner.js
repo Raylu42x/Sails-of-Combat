@@ -1,5 +1,6 @@
 import { SCENARIOS } from '../data/scenarios.js';
 import { sfx } from '../audio/sfx.js';
+import { progress } from './progress.js';
 
 // One overlay, three modes:
 //   briefing — before an action, with the level picker above it
@@ -20,8 +21,10 @@ export function createBanner(el, onStart) {
     listEl.innerHTML = '';
     for (const sc of SCENARIOS) {
       const b = document.createElement('button');
-      b.className = 'pick' + (sc.id === pending.id ? ' on' : '');
-      b.textContent = sc.name;
+      const done = progress.has(sc.id);
+      b.className = 'pick' + (sc.id === pending.id ? ' on' : '') + (done ? ' won' : '');
+      b.textContent = (done ? '✦ ' : '') + sc.name;
+      if (done) b.title = 'Taken';
       if (sc.id === current.id && mode === 'picker') b.title = 'The action you are in';
       b.addEventListener('pointerdown', () => { sfx.click(); showBriefing(sc); });
       listEl.appendChild(b);
@@ -46,6 +49,7 @@ export function createBanner(el, onStart) {
   }
 
   function showVerdict(v) {
+    if (v.won) progress.record(current.id);
     mode = 'verdict';
     el.dataset.inAction = '0';
     titleEl.textContent = v.title;
