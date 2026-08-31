@@ -41,8 +41,14 @@ export function createOrders(root, hintEl, game, onChange) {
     const you = ctx.you;
     const orders = game.getOrders();
     const grappled = !!you.grappledTo;
-    document.getElementById('ordersNormal').style.display = grappled ? 'none' : 'flex';
-    document.getElementById('ordersBoarding').style.display = grappled ? 'flex' : 'none';
+    const normal = document.getElementById('ordersNormal');
+    const boarding = document.getElementById('ordersBoarding');
+    const area = document.getElementById('ordersArea');
+    // Boarding swaps five order rows for one. Hold the block's height so the
+    // buttons below it do not jump up the screen mid-action.
+    if (!grappled && normal.offsetHeight) area.style.minHeight = normal.offsetHeight + 'px';
+    normal.style.display = grappled ? 'none' : 'flex';
+    boarding.style.display = grappled ? 'flex' : 'none';
 
     // Helm: a stiff ship cannot put her helm hard over.
     for (const b of document.getElementById('segHelm').querySelectorAll('button')) {
@@ -53,7 +59,7 @@ export function createOrders(root, hintEl, game, onChange) {
     // Ground tackle. On open-ocean charts there is no bottom anywhere, so the
     // row is hidden entirely rather than sitting there greyed out.
     const soundings = (ctx.map.water || []).length > 0;
-    document.getElementById('cableRow').style.display = soundings ? '' : 'none';
+    document.getElementById('cableRow').classList.toggle('reserved', !soundings);
     const overGround = ctx.board.anchorable(you.q, you.r);
     const canAnchor = you.anchor === 'up' && !you.grounded && overGround;
     const canWeigh = you.anchor === 'down' && !you.grounded;
