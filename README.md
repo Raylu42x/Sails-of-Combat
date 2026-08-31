@@ -130,6 +130,7 @@ Duty once ended up unwinnable.
 
 ## Docs
 
+- [docs/WORKING-TOGETHER.md](docs/WORKING-TOGETHER.md) — branch, rebase and merge flow when several people are on it at once
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the pieces fit together
 - [docs/ROADMAP.md](docs/ROADMAP.md) — what to build next, and why
 - [docs/IDEAS.md](docs/IDEAS.md) — the unfiltered idea bank behind the roadmap
