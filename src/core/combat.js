@@ -34,6 +34,34 @@ export const acceptsShot = (mount, shot) => {
   return !only || only.includes(shot);
 };
 
+// No sights, no fire control. A gun crew laid by eye off a moving deck, and
+// accuracy fell away sharply with distance — which is why these fights closed
+// to pistol shot. Hit chance by range, before any modifier.
+const HIT_AT = [0, 0.9, 0.68, 0.46];
+
+// Everything that makes a gun crew better or worse than that.
+export function hitChance(s, t, mount, shot, d, wind) {
+  let p = HIT_AT[Math.min(d, 3)] || 0.35;
+  p *= 0.9 + (s.quality - 1);                     // a crack crew against a poor one
+  p -= 0.08 * shortHanded(s);                     // fewer hands, worse laying
+  if (shot === 'double') p *= 0.8;                // two balls, wild
+  if (shot === 'grape') p *= 1.1;                 // a shotgun at this range
+  if (wind && wind.speed >= 3) p *= 0.82;         // she rolls in a gale
+  if (wind && wind.speed <= 1) p *= 1.06;         // a steady platform
+  if (t.sails === 'full') p *= 0.94;              // going fast, harder to lay on
+  return Math.max(0.12, Math.min(0.95, p));
+}
+
+// In a fresh gale she lies over far enough that the lee ports are awash. Head
+// to wind or dead before it she stands upright and both batteries can fire.
+export function leeSide(s, wind) {
+  if (!wind || wind.speed < 3) return null;
+  const rel = (wind.from - s.facing + 6) % 6;
+  if (rel === 1 || rel === 2) return 'port';   // wind on the starboard hand
+  if (rel === 4 || rel === 5) return 'stbd';
+  return null;
+}
+
 // Which mount, if any, bears on a target — and whether it is loaded.
 export function bearingMount(s, t) {
   const rel = relBearing(s, t, s.facing);
@@ -80,9 +108,14 @@ export function fireAll(s, ctx, shot, results) {
     return;
   }
   const enemies = targetsFor(s, ctx);
-  let fired = 0, bore = false, drew = 0;
+  let fired = 0, bore = false, drew = 0, heeled = null;
+  const lee = leeSide(s, ctx.wind);
   for (const [id, mount] of mountsOf(s)) {
     if (!isLoaded(s, id)) continue;
+    // Blowing hard, she heels away from the wind and her lee gunports come
+    // down to the water. They stay shut. This is what the weather gage costs
+    // you: the windward ship cannot open the battery she is bearing.
+    if (lee && id === lee && !mount.chaser) { heeled = mount.label || id; continue; }
     if (!acceptsShot(mount, shot)) continue;      // swivels take grape and nothing else
     const candidates = inArc(s, ctx, mount, shot, enemies);
     if (mount.arcs.some(a => enemies.some(t => relBearing(s, t, s.facing) === a))) bore = true;
@@ -96,14 +129,15 @@ export function fireAll(s, ctx, shot, results) {
       continue;
     }
     if (!candidates.length) continue;
-    results.push(resolveShot(s, candidates[0], id, mount, shot));
+    results.push(resolveShot(s, candidates[0], id, mount, shot, ctx.wind));
     fired++;
   }
   if (drew) results.push({ s, none: true, drew });
-  if (!fired && !drew) results.push({ s, none: true, broadside: bore, empty: !anyLoaded(s) });
+  if (heeled && !fired) results.push({ s, none: true, heeled });
+  if (!fired && !drew && !heeled) results.push({ s, none: true, broadside: bore, empty: !anyLoaded(s) });
 }
 
-function resolveShot(s, t, mountId, mount, shot) {
+function resolveShot(s, t, mountId, mount, shot, wind) {
   const d = dist(s, t);
   // The countdown also ticks at the end of this turn, which reloadTurns allows for.
   s.guns[mountId] = { reload: reloadTurns(s, mount, shot), shot };
@@ -113,7 +147,14 @@ function resolveShot(s, t, mountId, mount, shot) {
     (mount.power || 1) * gunType(mount.gun).power;
   const rangeMod = d >= 3 ? -1 : 0;
   const r = { s, t, shot, rake, mount: mountId, label: mount.label || mountId,
-    chaser: !!mount.chaser, hull: 0, rig: 0, crew: 0, rudder: false };
+    chaser: !!mount.chaser, hull: 0, rig: 0, crew: 0, rudder: false, d };
+  // Raking fires down the whole length of her — a far bigger mark than a beam.
+  const p = Math.min(0.95, hitChance(s, t, mount, shot, d, wind) * (rake ? 1.15 : 1));
+  if (!chance(p)) {
+    r.miss = true;
+    r.short = d >= 3;   // at long range it plumps into the sea short of her
+    return r;
+  }
   if (shot === 'round') {
     r.hull = Math.max(1, Math.round((2 + Math.floor(rnd() * 3) + rangeMod) * mult));
     if (chance(0.35)) r.crew = 1;
@@ -135,6 +176,8 @@ export function applyFireResult(r, log) {
   if (r.none) {
     if (!r.s.isYou) return;
     if (r.fullsail) log('Gun crews are aloft — under full sail the guns stay silent.', 'you');
+    else if (r.heeled) log('She lies over in the gale — the ' + r.heeled +
+      ' ports are under water and cannot be opened.', 'you');
     else if (r.drew) log('Charged with the wrong shot — the crews draw ' +
       (r.drew === 1 ? 'the charge' : 'the charges') + ' and reload. Ready next turn.', 'you');
     else if (r.empty) log('Every battery is still reloading.', 'you');
@@ -142,6 +185,12 @@ export function applyFireResult(r, log) {
     return;
   }
   const t = r.t;
+  if (r.miss) {
+    log(r.s.name + ' fires her ' + r.label + ' at ' + t.name + ' — ' +
+        (r.short ? 'the shot plumps into the sea short of her.' : 'and the broadside goes wide.'),
+        r.s.isYou ? 'you' : 'foe');
+    return;
+  }
   t.hull = Math.max(0, t.hull - r.hull);
   t.rigging = Math.max(0, t.rigging - r.rig);
   t.crew = Math.max(0, t.crew - r.crew);

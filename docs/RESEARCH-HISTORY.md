@@ -74,7 +74,8 @@ double-shotting (two balls, devastating and inaccurate, close only), heated
 shot (rare at sea — too dangerous to the firer; a shore-battery weapon).
 
 *Hook: short ranges force the closing decision. Reload rhythm makes WHEN to
-fire as important as at what. Heated shot, if ever added, should threaten the
+fire as important as at what. (Hit chance by range is now in the game, as is
+the gale heel that shuts the lee ports.) Heated shot, if ever added, should threaten the
 ship that fires it. (Bennett's red-hot-shot self-risk idea matches history.)*
 
 ## The engagement had an arc

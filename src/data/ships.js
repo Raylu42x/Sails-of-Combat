@@ -50,7 +50,7 @@ export const SHIP_TYPES = {
   },
   cutter: {
     id: 'cutter', draught: 'shallow', name: 'Revenue cutter', short: 'cutter',
-    rig: 'fa', speeds: [0, 2, 3, 2], turnMax: 2, tackOdds: 0.85,
+    rig: 'fa', speeds: [0, 2, 3, 3], turnMax: 2, tackOdds: 0.85,
     hull: 6, rigging: 7, crew: 9, quality: 1.1,
     mounts: {
       port: battery('port', 'medium'), stbd: battery('stbd', 'medium'),

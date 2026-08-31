@@ -37,6 +37,14 @@ leaving you wondering.
 
 Things worth knowing:
 
+- **Guns miss.** There were no sights and no fire control: a crew laid by eye
+  off a moving deck. Point-blank is nearly certain, long range is a lottery, and
+  a crack crew, a steady sea and a raking angle all help. This is why fights
+  closed to pistol shot.
+- **In a fresh gale she heels away from the wind and her lee gunports go under.**
+  That battery cannot be opened at all — the price of the weather gage. Head to
+  wind or dead before it she stands upright and both batteries bear.
+
 - **Guns fire as they bear.** Each battery has its own arc, its own charge and
   its own reload clock. A ship with bow or stern chasers can fire them in the
   same turn as a broadside, which is what makes a stern chase worth sailing.

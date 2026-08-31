@@ -71,6 +71,16 @@ export function createRenderer(canvas, box, game, layers) {
       await tween(r.chaser ? 180 : 240, k => { fx.tracer = { x1: A.x, y1: A.y, x2: B.x, y2: B.y, k }; });
       fx.tracer = null; fx.muzzle = null;
       apply(r, log);
+      if (r.miss) {
+        // A plume of water rather than a hit: the ball goes short or wide.
+        const off = L.S * 0.55;
+        const mx = B.x + (r.short ? (A.x - B.x) * 0.18 : off * (Math.random() < 0.5 ? -1 : 1));
+        const my = B.y + (r.short ? (A.y - B.y) * 0.18 : off * 0.5);
+        addFlash(mx, my, C('--ink-dim'), false);
+        addFloater(mx, my, r.short ? 'SHORT' : 'WIDE', C('--ink-dim'));
+        await sleepDraw(300);
+        return;
+      }
       if (r.rake) sfx.rake();
       else sfx.hit(r.rig && !r.hull ? 'rig' : r.crew && !r.hull ? 'crew' : 'hull');
       const color = r.crew && !r.hull ? C('--signal') : C('--flash');

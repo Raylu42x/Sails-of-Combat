@@ -109,5 +109,17 @@ export function checkStrike(s, ctx) {
   const hullF = s.hull / s.hullMax, crewF = s.crew / s.crewMax, rigF = s.rigging / s.rigMax;
   const beaten = hullF <= 0.25 || crewF <= 0.25 || (rigF <= 0.15 && hullF <= 0.6);
   if (beaten && chance(0.5)) { s.struck = true; return true; }
+  // A ship that cannot run, with an enemy standing off at close range, strikes
+  // rather than be raked to pieces where she lies. Most fights of the period
+  // ended exactly here — dismasted, aground, or pinned, with a sound hull and
+  // no way out. Without this a crippled ship drifts on, technically unbeaten,
+  // and a chase can be won on the water and lost on the clock.
+  const helpless = s.rigging <= 0 || s.grounded;
+  if (helpless) {
+    const near = ctx.ships
+      .filter(o => !o.struck && o.side !== s.side)
+      .reduce((best, o) => Math.min(best, dist(s, o)), 99);
+    if (near <= 2 && chance(0.55)) { s.struck = true; return true; }
+  }
   return false;
 }
