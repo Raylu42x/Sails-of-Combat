@@ -1,9 +1,9 @@
 import { dist } from '../core/hex.js';
 import { ATT_NAMES, attOf } from '../core/wind.js';
-import { anyLoaded, mountsOf, simFacing, speedOf } from '../core/ship.js';
-import { MOUNT_LABEL, SHOT } from '../core/combat.js';
+import { isLoaded, mountsOf, shortHanded, simFacing, speedOf } from '../core/ship.js';
+import { acceptsShot } from '../core/combat.js';
 
-const MOUNT_TAG = { port: 'P', stbd: 'S', bow: 'Bow', stern: 'Stern' };
+const SHOT_TAG = { round: 'rnd', chain: 'chn', grape: 'grp', double: 'dbl' };
 
 // Wires the order segments, keeps them honest about what this ship can do,
 // and writes the one-line forecast under the chart.
@@ -57,8 +57,9 @@ export function createOrders(root, hintEl, game, onChange) {
     grapBtn.disabled = far;
     if (far && orders.grapple === 'yes') game.setOrder('grapple', 'no');
 
+    // Guns can always be *ordered* to load a type; full sail is what silences them.
     for (const b of document.getElementById('segShot').querySelectorAll('button')) {
-      b.disabled = (b.dataset.v !== 'hold') && (!anyLoaded(you) || orders.sails === 'full');
+      b.disabled = b.dataset.v !== 'hold' && orders.sails === 'full';
     }
     syncSegs(ctx);
     updateHint(ctx, nearest);
@@ -71,15 +72,25 @@ export function createOrders(root, hintEl, game, onChange) {
     if (you.grappledTo) { hintEl.textContent = 'Grappled with ' + you.grappledTo.name + ' — steel decides now.'; return; }
     const att = attOf(simFacing(you, orders.helm), ctx.wind.from);
     const spd = att === 0 ? 0 : speedOf(you, att, orders.sails, ctx.wind);
+    // Each battery shows what is in it: a tick and the charge when it is ready,
+    // the turns remaining when it is not.
     const batteries = mountsOf(you)
-      .map(([id]) => MOUNT_TAG[id] + ' ' + (you.guns[id] === 0 ? '✓' : you.guns[id]))
+      .map(([id, m]) => m.tag + ' ' +
+        (isLoaded(you, id) ? '✓' + (SHOT_TAG[you.guns[id].shot] || you.guns[id].shot) : you.guns[id].reload))
       .join(' · ');
+    // Ordering a charge the guns are not holding costs a reload to draw.
+    const willDraw = orders.shot !== 'hold' && mountsOf(you)
+      .filter(([id, m]) => isLoaded(you, id) && acceptsShot(m, orders.shot) && you.guns[id].shot !== orders.shot)
+      .map(([, m]) => m.tag);
     const gun = orders.sails === 'full' ? 'guns silent — full sail'
-      : batteries + (orders.shot === 'hold' ? ' · held' : ' · ' + orders.shot);
+      : batteries + (orders.shot === 'hold' ? ' · held' : ' · ' + orders.shot) +
+        (willDraw && willDraw.length ? ' · drawing ' + willDraw.join('/') : '');
+    const hands = ['', ' · short-handed', ' · skeleton crew'][shortHanded(you)];
     const range = nearest
       ? ' · range ' + dist(you, nearest) + (game.visibleTo(you, nearest) ? '' : ' (lost from sight)')
       : '';
-    hintEl.textContent = ATT_NAMES[att] + ' → ' + spd + ' hex' + (spd === 1 ? '' : 'es') + range + ' · ' + gun;
+    hintEl.textContent = ATT_NAMES[att] + ' → ' + spd + ' hex' + (spd === 1 ? '' : 'es') +
+      hands + range + ' · ' + gun;
   }
 
   return { refresh };

@@ -2,7 +2,7 @@ import { createEmitter } from './events.js';
 import { dist, unitPos } from './hex.js';
 import { setSeed, chance } from './rng.js';
 import { createBoard } from './board.js';
-import { applyHelm, createShip, mountsOf } from './ship.js';
+import { applyHelm, createShip, crewFrac, mountsOf } from './ship.js';
 import { attOf, maybeShift, windLabel } from './wind.js';
 import { moveShips } from './movement.js';
 import { applyFireResult, fireAll, meleeRound, tryGrapple } from './combat.js';
@@ -70,14 +70,17 @@ export function createGame(view) {
   function endOfTurn() {
     for (const s of ctx.ships) {
       if (s.struck) continue;
-      if (s.sails === 'takein' && s.rigging < s.rigMax && chance(0.9)) {
+      if (s.sails === 'takein' && s.rigging < s.rigMax && chance(0.35 + 0.55 * crewFrac(s))) {
         s.rigging += 1;
         log(s.name + '’s topmen knot and splice — rigging repaired.', s.isYou ? 'you' : 'foe');
       }
-      for (const [id] of mountsOf(s)) {
-        if (s.guns[id] > 0) {
-          s.guns[id] -= 1;
-          if (s.guns[id] === 0 && s.isYou) log('Your ' + id + ' battery is loaded and run out.', 'you');
+      for (const [id, mount] of mountsOf(s)) {
+        const g = s.guns[id];
+        if (g.reload > 0) {
+          g.reload -= 1;
+          if (g.reload === 0 && s.isYou) {
+            log('Your ' + (mount.label || id) + ' is loaded with ' + g.shot + ' and run out.', 'you');
+          }
         }
       }
       if (s.rudderJam > 0) s.rudderJam -= 1;

@@ -152,11 +152,13 @@ export function createRenderer(canvas, box, game) {
       cx.lineWidth = 2;
       const mark = (id, x1, x2, y) => {
         if (!(id in s.guns)) return;
-        cx.strokeStyle = s.guns[id] === 0 ? C('--flash') : C('--chart');
+        cx.strokeStyle = s.guns[id].reload === 0 ? C('--flash') : C('--chart');
         cx.beginPath(); cx.moveTo(x1, y); cx.lineTo(x2, y); cx.stroke();
       };
       mark('stbd', -Lh * 0.55, Lh * 0.15, W2 + 3.5);
       mark('port', -Lh * 0.55, Lh * 0.15, -W2 - 3.5);
+      mark('stbdSw', -Lh * 0.2, Lh * 0.15, W2 + 6.5);
+      mark('portSw', -Lh * 0.2, Lh * 0.15, -W2 - 6.5);
       mark('bow', Lh * 0.6, Lh * 0.95, 0);
       mark('stern', -Lh * 1.05, -Lh * 0.9, 0);
     }

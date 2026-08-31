@@ -76,7 +76,7 @@ export function evaluate(ctx) {
 export function checkStrike(s, ctx) {
   if (s.struck) return false;
   if (s.hull <= 0) { s.struck = true; return true; }
-  if (s.crew <= 2) { s.struck = true; return true; }
+  if (s.crew <= 0) { s.struck = true; return true; } // not a soul left to fight her
   if (s.isYou) return false;
   const hullF = s.hull / s.hullMax, crewF = s.crew / s.crewMax, rigF = s.rigging / s.rigMax;
   const beaten = hullF <= 0.25 || crewF <= 0.25 || (rigF <= 0.15 && hullF <= 0.6);
