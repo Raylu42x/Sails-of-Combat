@@ -1,7 +1,7 @@
 import { dist } from '../core/hex.js';
 import { ATT_NAMES, attOf } from '../core/wind.js';
-import { isLoaded, mountsOf, shortHanded, simFacing, speedOf } from '../core/ship.js';
-import { acceptsShot, momentumText } from '../core/combat.js';
+import { isLoaded, madeFast, mountsOf, shortHanded, simFacing, speedOf } from '../core/ship.js';
+import { acceptsShot, drawTurns, momentumText, wouldDraw } from '../core/combat.js';
 
 const SHOT_TAG = { round: 'rnd', chain: 'chn', grape: 'grp', double: 'dbl' };
 
@@ -89,13 +89,32 @@ export function createOrders(root, hintEl, game, onChange) {
       b.disabled = b.dataset.v !== 'hold' && orders.sails === 'full';
     }
     syncSegs(ctx);
-    updateHint(ctx, nearest);
+
+    // No silent course. After a wind shift the helm has no default at all, and
+    // the default may never carry her quietly into irons — either way the turn
+    // waits until the captain gives her a course (straight ahead counts, but
+    // it must be chosen). A jammed rudder or a ship made fast has no helm to give.
+    const canSteer = !grappled && !madeFast(you) && !(you.rudderJam > 0);
+    const intoIrons = attOf(simFacing(you, orders.helm), ctx.wind.from) === 0;
+    const needsHelm = canSteer && !orders.helmSet && (ctx.windShifted || intoIrons);
+    const helmSeg = document.getElementById('segHelm');
+    helmSeg.parentElement.classList.toggle('warn', needsHelm);
+    if (needsHelm) for (const b of helmSeg.querySelectorAll('button')) b.classList.remove('on');
+    const execBtn = document.getElementById('exec');
+    if (execBtn) execBtn.disabled = !!ctx.busy || !!ctx.over || needsHelm;
+    updateHint(ctx, nearest, needsHelm);
   }
 
-  function updateHint(ctx, nearest) {
+  function updateHint(ctx, nearest, needsHelm) {
     if (ctx.over) return;
     const you = ctx.you;
     const orders = game.getOrders();
+    if (needsHelm) {
+      hintEl.textContent = ctx.windShifted
+        ? 'The wind has shifted — give her a course before the turn can run.'
+        : 'She will be in irons — give her helm before the turn can run.';
+      return;
+    }
     if (you.grappledTo) {
       const f = ctx.boarding;
       hintEl.textContent = 'Boarding ' + you.grappledTo.name + ' — ' +
@@ -111,13 +130,16 @@ export function createOrders(root, hintEl, game, onChange) {
       .map(([id, m]) => m.tag + ' ' +
         (isLoaded(you, id) ? '✓' + (SHOT_TAG[you.guns[id].shot] || you.guns[id].shot) : you.guns[id].reload))
       .join(' · ');
-    // Ordering a charge the guns are not holding costs a reload to draw.
-    const willDraw = orders.shot !== 'hold' && mountsOf(you)
-      .filter(([id, m]) => isLoaded(you, id) && acceptsShot(m, orders.shot) && you.guns[id].shot !== orders.shot)
-      .map(([, m]) => m.tag);
+    // Ordering a charge the guns are not holding costs a turn to draw — but
+    // only for a battery that has something in reach to fire it at.
+    const draws = wouldDraw(you, ctx, orders.shot);
+    const willDraw = draws.map(d => d.tag);
+    const drawCost = draws.reduce((n, d) => Math.max(n, drawTurns(you, d.mount, orders.shot)), 0);
     const gun = orders.sails === 'full' ? 'guns silent — full sail'
       : batteries + (orders.shot === 'hold' ? ' · held' : ' · ' + orders.shot) +
-        (willDraw && willDraw.length ? ' · drawing ' + willDraw.join('/') : '');
+        (willDraw.length
+          ? ' · drawing ' + willDraw.join('/') + ' (' + drawCost + ' turn' + (drawCost === 1 ? '' : 's') + ')'
+          : '');
     const hands = ['', ' · short-handed', ' · skeleton crew'][shortHanded(you)];
     const ground = you.grounded ? ' · AGROUND'
       : you.anchor === 'down' ? ' · at anchor'

@@ -19,8 +19,14 @@ export function reloadTurns(s, mount, shot) {
   return Math.max(1, SHOT[shot].reload + (mount.reload || 0) + g.reload + 1 + shortHanded(s));
 }
 
-// A gun loaded with one kind of shot cannot fire another. Changing your mind
-// means drawing the charge, which costs the same as a reload.
+// Drawing a charge is quicker than loading one: the shot comes out, the new one
+// goes in, and the powder is already there. Half a reload, never less than one
+// turn — so changing your mind costs you this turn's fire, not two.
+export function drawTurns(s, mount, shot) {
+  return Math.max(1, Math.ceil(reloadTurns(s, mount, shot) / 2));
+}
+
+// A gun loaded with one kind of shot cannot fire another.
 export const canFire = (s, id, shot) => isLoaded(s, id) && s.guns[id].shot === shot;
 export const rangeOf = (mount, shot) => Math.max(1, SHOT[shot].range + gunType(mount.gun).rangeMod);
 export const acceptsShot = (mount, shot) => {
@@ -41,6 +47,31 @@ function targetsFor(s, ctx) {
   return ctx.ships.filter(o => !o.struck && o.side !== s.side);
 }
 
+// Enemies this mount could actually engage with this shot, nearest first.
+function inArc(s, ctx, mount, shot, enemies) {
+  const range = rangeOf(mount, shot);
+  return enemies
+    .filter(t => {
+      const d = dist(s, t);
+      return d > 0 && d <= range &&
+        mount.arcs.includes(relBearing(s, t, s.facing)) &&
+        !ctx.board.shotBlocked(s, t);
+    })
+    .sort((a, b) => dist(s, a) - dist(s, b));
+}
+
+// Which batteries would have to draw their charge to obey this order. Only
+// guns with something to shoot at draw — ordering grape while she is still a
+// mile off leaves your round shot where it is.
+export function wouldDraw(s, ctx, shot) {
+  if (shot === 'hold' || s.sails === 'full') return [];
+  const enemies = targetsFor(s, ctx);
+  return mountsOf(s)
+    .filter(([id, m]) => isLoaded(s, id) && acceptsShot(m, shot) &&
+      s.guns[id].shot !== shot && inArc(s, ctx, m, shot, enemies).length)
+    .map(([id, m]) => ({ id, mount: m, tag: m.tag }));
+}
+
 // Every loaded mount that bears fires this turn — broadside and chasers alike.
 export function fireAll(s, ctx, shot, results) {
   if (shot === 'hold') return; // hold your fire and keep what is in the guns
@@ -53,22 +84,18 @@ export function fireAll(s, ctx, shot, results) {
   for (const [id, mount] of mountsOf(s)) {
     if (!isLoaded(s, id)) continue;
     if (!acceptsShot(mount, shot)) continue;      // swivels take grape and nothing else
+    const candidates = inArc(s, ctx, mount, shot, enemies);
+    if (mount.arcs.some(a => enemies.some(t => relBearing(s, t, s.facing) === a))) bore = true;
     if (s.guns[id].shot !== shot) {               // wrong charge in the barrel
-      s.guns[id].reload = reloadTurns(s, mount, shot);
+      // Only draw for a gun that has a mark to shoot at; otherwise she keeps
+      // what she is holding and you have lost nothing.
+      if (!candidates.length) continue;
+      s.guns[id].reload = drawTurns(s, mount, shot);
       s.guns[id].shot = shot;
       drew++;
       continue;
     }
-    const range = rangeOf(mount, shot);
-    const candidates = enemies.filter(t => {
-      const d = dist(s, t);
-      if (d === 0) return false;
-      if (!mount.arcs.includes(relBearing(s, t, s.facing))) return false;
-      bore = true;
-      return d <= range && !ctx.board.shotBlocked(s, t);
-    });
     if (!candidates.length) continue;
-    candidates.sort((a, b) => dist(s, a) - dist(s, b));
     results.push(resolveShot(s, candidates[0], id, mount, shot));
     fired++;
   }
@@ -108,8 +135,8 @@ export function applyFireResult(r, log) {
   if (r.none) {
     if (!r.s.isYou) return;
     if (r.fullsail) log('Gun crews are aloft — under full sail the guns stay silent.', 'you');
-    else if (r.drew) log('The guns are charged with something else — the crews draw ' +
-      (r.drew === 1 ? 'the charge' : 'the charges') + ' and load afresh.', 'you');
+    else if (r.drew) log('Charged with the wrong shot — the crews draw ' +
+      (r.drew === 1 ? 'the charge' : 'the charges') + ' and reload. Ready next turn.', 'you');
     else if (r.empty) log('Every battery is still reloading.', 'you');
     else log('Your guns find no bearing' + (r.broadside ? ' at this range.' : ' — she lies off your arcs.'), 'you');
     return;

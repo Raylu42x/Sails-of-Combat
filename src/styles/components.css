@@ -98,3 +98,74 @@
 }
 .icon-btn.off { color: var(--ink-dim); }
 .icon-btn:focus-visible { outline: 2px solid var(--flash); outline-offset: 1px; }
+
+/* --- a helm that demands an order (wind shift, or irons dead ahead) --- */
+.orow.warn .lbl { color: var(--signal); }
+.orow.warn .seg button { border-color: var(--signal); }
+@media (prefers-reduced-motion: no-preference) {
+  .orow.warn .lbl { animation: helm-blink 1.1s steps(2, start) infinite; }
+}
+@keyframes helm-blink { 50% { opacity: 0.35; } }
+
+/* --- the ship sheet, opened from a ship card --- */
+.ships .card { cursor: pointer; }
+.sheet {
+  position: fixed; inset: 0; z-index: 20; display: none;
+  align-items: center; justify-content: center;
+  background: rgba(11, 27, 36, 0.88); padding: 20px;
+}
+.sheet.show { display: flex; }
+.sheet .inner {
+  background: var(--panel); border: 1px solid var(--chart);
+  padding: 14px 16px 12px; max-width: 350px; width: 100%;
+  font-family: "IBM Plex Mono", monospace; font-size: 12px; line-height: 1.65;
+  color: var(--ink);
+}
+.sheet h3 {
+  margin: 0 0 6px; font-family: "Barlow Condensed", sans-serif;
+  font-size: 18px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--brass);
+}
+.sheet .dim { color: var(--ink-dim); }
+.sheet .mounts { margin-top: 6px; }
+.sheet .mount { margin-top: 4px; }
+.sheet .cond { margin-top: 8px; }
+.sheet .closehint { margin-top: 8px; }
+/* --- chart layers control, top right of the chart --- */
+.layers { position: absolute; top: 6px; right: 6px; z-index: 3; }
+.layers-btn {
+  font-family: inherit; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 5px 9px; cursor: pointer;
+  border: 1px solid var(--chart); background: rgba(16,36,47,0.85); color: var(--ink-dim);
+}
+.layers.open .layers-btn, .layers-btn:hover { color: var(--brass); border-color: var(--brass); }
+.layers-btn:focus-visible { outline: 2px solid var(--flash); outline-offset: 1px; }
+.layers-menu {
+  display: none; position: absolute; top: calc(100% + 4px); right: 0;
+  min-width: 158px; padding: 4px;
+  border: 1px solid var(--chart); background: rgba(16,36,47,0.96);
+}
+.layers.open .layers-menu { display: block; }
+.layers-row {
+  display: flex; align-items: center; gap: 7px; width: 100%;
+  font-family: inherit; font-size: 11.5px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 6px 6px; cursor: pointer;
+  border: 0; background: transparent; color: var(--ink-dim); text-align: left;
+}
+.layers-row:hover { color: var(--ink); }
+.layers-row.on { color: var(--brass); }
+.layers-row.empty .nm { text-decoration: line-through; opacity: 0.6; }
+.layers-row .tick {
+  width: 11px; height: 11px; flex: none;
+  border: 1px solid currentColor; position: relative;
+}
+.layers-row.on .tick::after {
+  content: ''; position: absolute; inset: 2px; background: currentColor;
+}
+.layers-note {
+  font-family: "IBM Plex Mono", monospace; font-size: 9.5px; line-height: 1.4;
+  color: var(--ink-dim); padding: 2px 6px 5px; max-width: 158px;
+}
+.layers-note:empty { display: none; }

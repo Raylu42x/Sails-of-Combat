@@ -23,12 +23,17 @@ Each turn you set four orders and press **Make it so**:
 | --- | --- |
 | **Helm** | Turn one or two points to port or starboard. Turning through the eye of the wind is a tack — a fore-and-aft rig usually makes it, a square rig often misses stays and is caught **in irons**. |
 | **Sails** | *Full* is fastest but sends the gun crews aloft, so the guns stay silent. *Battle* is the fighting sail. *Take in* is slow but lets the topmen repair rigging. |
-| **Guns** | *Round* hulls her, *chain* cuts her rigging, *grape* kills crew up close, *double* is a short-range hull-smasher that reloads slowly. *Hold* keeps what is in the barrels. **A loaded gun cannot fire a different charge** — order another kind and the crews must draw the charge and load afresh, which costs a reload. |
+| **Guns** | *Round* hulls her, *chain* cuts her rigging, *grape* kills crew up close, *double* is a short-range hull-smasher that reloads slowly. *Hold* keeps what is in the barrels. **A loaded gun cannot fire a different charge** — order another kind and the crews draw the charge and reload, which costs one turn (two for double shot). Guns with nothing in range keep what they are holding, so choosing grape early never dumps your round shot. |
 | **Cable** | Let go the anchor where the lead finds bottom, or weigh it again — which costs a whole turn. |
 | **Close** | Grapple and board when you are alongside. Then choose how much of the crew to commit: *all hands*, the *boarding party* alone, *repel* on the defensive, or *cut free*. |
 
 Keyboard: arrows for helm and sail, 1–5 for shot, space to give the order,
-**L** for levels, **M** for sound.
+**L** for levels, **M** for sound, **D** for soundings, **G** for gun arcs.
+
+**Layers**, top right of the chart, turns the overlays on and off — soundings,
+gun arcs, your track for this turn, and the range line — and remembers what you
+chose. Open water has no soundings to show, and the menu says so rather than
+leaving you wondering.
 
 Things worth knowing:
 
@@ -130,6 +135,7 @@ Duty once ended up unwinnable.
 
 ## Docs
 
+- [docs/WORKING-TOGETHER.md](docs/WORKING-TOGETHER.md) — branch, rebase and merge flow when several people are on it at once
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the pieces fit together
 - [docs/ROADMAP.md](docs/ROADMAP.md) — what to build next, and why
 - [docs/IDEAS.md](docs/IDEAS.md) — the unfiltered idea bank behind the roadmap
