@@ -82,12 +82,28 @@ export function createOrders(root, hintEl, game, onChange) {
     const far = !nearest || dist(you, nearest) > 2;
     const grapBtn = document.getElementById('grapBtn');
     grapBtn.disabled = far;
+    // A ship that has struck is a prize, but only if you put people aboard her.
+    const prizeBtn = document.getElementById('prizeBtn');
+    const beaten = ctx.ships.find(o => o.struck && !o.destroyed && !o.taken &&
+      o.side !== you.side && dist(you, o) <= 1);
+    prizeBtn.style.display = beaten ? '' : 'none';
+    prizeBtn.disabled = !beaten;
+    if (beaten) prizeBtn.title = 'Put a prize crew aboard ' + beaten.name +
+      ' — she is worth nothing until she is manned and sailed in';
+    if (!beaten && orders.grapple === 'prize') game.setOrder('grapple', 'no');
     if (far && orders.grapple === 'yes') game.setOrder('grapple', 'no');
 
     // Guns can always be *ordered* to load a type; full sail is what silences them.
     for (const b of document.getElementById('segShot').querySelectorAll('button')) {
+      if (b.dataset.v === 'fireparty') {
+        // Only offered when there is something to fight.
+        b.disabled = !you.fire;
+        b.style.display = you.fire ? '' : 'none';
+        continue;
+      }
       b.disabled = b.dataset.v !== 'hold' && orders.sails === 'full';
     }
+    if (!you.fire && orders.shot === 'fireparty') game.setOrder('shot', 'round');
     syncSegs(ctx);
 
     // No silent course. After a wind shift the helm has no default at all, and
@@ -145,6 +161,7 @@ export function createOrders(root, hintEl, game, onChange) {
           ? ' · drawing ' + willDraw.join('/') + ' (' + drawCost + ' turn' + (drawCost === 1 ? '' : 's') + ')'
           : '');
     const hands = ['', ' · short-handed', ' · skeleton crew'][shortHanded(you)];
+    const ablaze = you.fire ? ' · ABLAZE' + (you.fire > 1 ? ' (' + you.fire + ')' : '') : '';
     const ground = you.grounded ? ' · AGROUND'
       : you.anchor === 'down' ? ' · at anchor'
       : you.anchor === 'weighing' ? ' · weighing'
@@ -156,7 +173,7 @@ export function createOrders(root, hintEl, game, onChange) {
     const way = you.grounded ? 'Aground → 0 hexes'
       : you.anchor !== 'up' ? 'Riding at anchor → 0 hexes'
       : ATT_NAMES[att] + ' → ' + spd + ' hex' + (spd === 1 ? '' : 'es');
-    hintEl.textContent = way + ground + hands + range + ' · ' + gun;
+    hintEl.textContent = way + ground + ablaze + hands + range + ' · ' + gun;
   }
 
   return { refresh };

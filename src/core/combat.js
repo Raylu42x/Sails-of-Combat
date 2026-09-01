@@ -34,6 +34,19 @@ export const acceptsShot = (mount, shot) => {
   return !only || only.includes(shot);
 };
 
+// It was rarely the ball that killed. A round shot punching through two feet of
+// oak threw a storm of splinters off the inside of the hull, and that is what
+// swept the gun deck — so the men a shot kills follow from the damage it does
+// to the timbers, not from a separate roll. A raking shot down the length of
+// the deck finds far more of them.
+function splinters(hullDamage, rake) {
+  if (hullDamage <= 0) return 0;
+  let n = Math.floor(hullDamage / 3);                 // the heavy hits always tell
+  if (chance((hullDamage % 3) / 3)) n += 1;           // and the rest, proportionally
+  if (rake) n = Math.round(n * (rake === 'stern' ? 1.8 : 1.4));
+  return n;
+}
+
 // No sights, no fire control. A gun crew laid by eye off a moving deck, and
 // accuracy fell away sharply with distance — which is why these fights closed
 // to pistol shot. Hit chance by range, before any modifier.
@@ -103,6 +116,10 @@ export function wouldDraw(s, ctx, shot) {
 // Every loaded mount that bears fires this turn — broadside and chasers alike.
 export function fireAll(s, ctx, shot, results) {
   if (shot === 'hold') return; // hold your fire and keep what is in the guns
+  if (shot === 'fireparty') {  // every hand is at the buckets, not the guns
+    results.push({ s, none: true, fireparty: true });
+    return;
+  }
   if (s.sails === 'full') {
     if (anyLoaded(s)) results.push({ s, none: true, fullsail: true });
     return;
@@ -157,7 +174,7 @@ function resolveShot(s, t, mountId, mount, shot, wind) {
   }
   if (shot === 'round') {
     r.hull = Math.max(1, Math.round((2 + Math.floor(rnd() * 3) + rangeMod) * mult));
-    if (chance(0.35)) r.crew = 1;
+    r.crew = splinters(r.hull, rake);
   } else if (shot === 'chain') {
     r.rig = Math.max(1, Math.round((2 + Math.floor(rnd() * 2)) * mult));
     if (t.sails === 'full') r.rig += 1;
@@ -165,9 +182,12 @@ function resolveShot(s, t, mountId, mount, shot, wind) {
     r.crew = Math.max(1, Math.round((2 + Math.floor(rnd() * 3)) * mult));
   } else if (shot === 'double') {
     r.hull = Math.max(2, Math.round((3 + Math.floor(rnd() * 4)) * mult));
-    if (chance(0.5)) r.crew = 1;
+    r.crew = splinters(r.hull, rake);
   }
   if (rake === 'stern' && chance(0.35)) r.rudder = true;
+  // Loose powder, a smashed lantern, burning wadding driven into splintered
+  // timber. A heavy hit is what starts it.
+  if (r.hull >= 4 && chance(shot === 'double' ? 0.18 : 0.10)) r.fire = true;
   return r;
 }
 
@@ -176,6 +196,7 @@ export function applyFireResult(r, log) {
   if (r.none) {
     if (!r.s.isYou) return;
     if (r.fullsail) log('Gun crews are aloft — under full sail the guns stay silent.', 'you');
+    else if (r.fireparty) log('Buckets and wet swabs — every hand is fighting the fire.', 'you');
     else if (r.heeled) log('She lies over in the gale — the ' + r.heeled +
       ' ports are under water and cannot be opened.', 'you');
     else if (r.drew) log('Charged with the wrong shot — the crews draw ' +
@@ -203,6 +224,10 @@ export function applyFireResult(r, log) {
       (r.rake ? ', RAKING her ' + r.rake + '!' : '') + ' (' + bits.join(', ') + ')',
       r.rake ? 'big' : who);
   if (r.rudder) log(t.name + '’s rudder is shot away — she cannot steer!', 'big');
+  if (r.fire && !t.fire) {
+    t.fire = 1;
+    log('Fire aboard ' + t.name + '! Smoke pours from her gun deck.', 'big');
+  }
   if (t.rigging === 0 && r.rig) log(t.name + ' is dismasted! She drifts helpless.', 'big');
 }
 

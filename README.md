@@ -41,6 +41,23 @@ Things worth knowing:
   off a moving deck. Point-blank is nearly certain, long range is a lottery, and
   a crack crew, a steady sea and a raking angle all help. This is why fights
   closed to pistol shot.
+- **Splinters do the killing.** A round shot punching through two feet of oak
+  throws a storm of splinters off the inside of the hull, and that is what
+  sweeps a gun deck — so the men a shot kills follow from the damage it does to
+  her timbers. A rake down the length of the deck finds far more of them.
+- **Square rigs sag to leeward.** Braced hard up, a square-rigged ship does not
+  go where she points; she is pushed bodily sideways, and the harder it blows
+  the more she slips. This is why a sloop claws off a lee shore and a brig
+  sometimes does not.
+- **Fire is the thing that actually destroys ships.** A heavy hit can set her
+  alight. Left alone it spreads, eating hull and hands; call the **fire party**
+  and every hand is at the buckets instead of the guns. If it reaches the
+  magazine she blows up — no prize, no survivors, nothing to sell.
+- **A beaten ship is not yet a prize.** She has to be manned: lay alongside
+  after she strikes and **take possession**, which costs you hands you may want
+  later. Her condition when she struck sets what the court will pay — which
+  makes "fire at her rigging, not her hull" a money decision as much as a
+  tactical one.
 - **In a fresh gale she heels away from the wind and her lee gunports go under.**
   That battery cannot be opened at all — the price of the weather gage. Head to
   wind or dead before it she stands upright and both batteries bear.

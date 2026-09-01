@@ -215,9 +215,31 @@ export function createRenderer(canvas, box, game, layers) {
       cx.stroke();
       cx.restore();
     }
-    const tag = s.struck ? 'STRUCK' : s.grounded ? 'AGROUND' : s.inIrons ? 'IN IRONS' : null;
+    // Fire reads at a glance, because it is the thing that will actually kill her.
+    if (s.fire && !s.destroyed && !s.struck) {
+      const t0 = now() / 90;
+      for (let i = 0; i < 2 + s.fire; i++) {
+        const flick = Math.sin(t0 + i * 1.7) * 0.5 + 0.5;
+        const fx0 = p.x + (i - (2 + s.fire) / 2) * L.S * 0.2;
+        const fy0 = p.y - L.S * 0.32 - flick * L.S * 0.18;
+        cx.fillStyle = i % 2 ? C('--brass') : C('--signal');
+        cx.globalAlpha = 0.55 + 0.45 * flick;
+        cx.beginPath();
+        cx.moveTo(fx0, fy0 - L.S * 0.2);
+        cx.lineTo(fx0 + L.S * 0.09, fy0);
+        cx.lineTo(fx0 - L.S * 0.09, fy0);
+        cx.closePath(); cx.fill();
+      }
+      cx.globalAlpha = 1;
+    }
+    const tag = s.destroyed ? 'BLOWN UP'
+      : s.taken ? 'PRIZE'
+      : s.struck ? 'STRUCK'
+      : s.fire ? 'ABLAZE'
+      : s.grounded ? 'AGROUND'
+      : s.inIrons ? 'IN IRONS' : null;
     if (tag) {
-      cx.fillStyle = C('--flash');
+      cx.fillStyle = s.fire && !s.struck ? C('--signal') : s.taken ? C('--brass') : C('--flash');
       cx.font = '700 10px "Barlow Condensed", sans-serif';
       cx.textAlign = 'center';
       cx.fillText(tag, p.x, p.y - L.S * 0.85);

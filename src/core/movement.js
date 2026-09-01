@@ -40,7 +40,7 @@ export function moveShips(ctx, log) {
   // What each ship intends this turn, measured from where everyone starts.
   const movers = [];
   for (const s of ships) {
-    if (s.struck || s.grappledTo || madeFast(s)) continue;
+    if (s.struck || s.grappledTo || madeFast(s) || s.heaveTo) continue;
     if (s.inIrons || s.rigging <= 0) {
       movers.push({ s, drift: true, hexes: 1 });
       if (s.inIrons) log(s.name + ' hangs in irons, drifting to leeward.', s.isYou ? 'you' : 'foe');
@@ -98,6 +98,26 @@ export function moveShips(ctx, log) {
       }
     }
   }
+
+  // Leeway. A square-rigged ship braced hard up does not go where she points:
+  // she is pushed bodily sideways as she sails, and the harder it blows the more
+  // she sags. A fore-and-aft rig grips the water far better, which is the whole
+  // reason a sloop claws off a lee shore and a brig sometimes does not.
+  for (const m of movers) {
+    const s2 = m.s;
+    if (m.drift || s2.rig !== 'sq' || s2.grounded) continue;
+    if (attOf(s2.facing, wind.from) !== 1) continue;   // only close-hauled
+    const odds = [0, 0.2, 0.35, 0.5][wind.speed] || 0.35;
+    if (!chance(odds)) continue;
+    const to = board.driftTo(s2, wind.from);
+    if (!board.passable(to.q, to.r)) continue;
+    if (ships.some(o => o !== s2 && same(o, to))) continue;
+    s2.q = to.q; s2.r = to.r;
+    paths[s2.uid].push({ q: to.q, r: to.r });
+    log(s2.name + ' sags away to leeward — she will not hold her weather berth.',
+      s2.isYou ? 'you' : 'foe');
+  }
+
   return paths;
 }
 
