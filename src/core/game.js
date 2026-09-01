@@ -309,8 +309,12 @@ export function createGame(view) {
     orders.helmSet = false;
     await view.pause(400);
     const verdict = evaluate(ctx);
-    bus.emit('change', ctx);
+    // Clear busy BEFORE the final change: that change is what repaints the
+    // chart, and the renderer draws the track, arcs and range overlays only
+    // when the turn is idle. Emitting it while busy left the chart bare until
+    // the first tap of the next turn.
     ctx.busy = false;
+    bus.emit('change', ctx);
     bus.emit('busy', false);
     if (verdict) finish(verdict);
   }
