@@ -2,7 +2,7 @@ import { DIRS, angleOf, dist, relBearing } from '../core/hex.js';
 import { attOf } from '../core/wind.js';
 import { pathOf } from '../core/movement.js';
 import { isLoaded, mountsOf, simFacing } from '../core/ship.js';
-import { acceptsShot, rangeOf } from '../core/combat.js';
+import { acceptsShot, leeSide, rangeOf } from '../core/combat.js';
 import { createLayout } from './layout.js';
 import { sfx } from '../audio/sfx.js';
 
@@ -277,17 +277,25 @@ export function createRenderer(canvas, box, game, layers) {
   function drawArcs(ctx, from, facing) {
     const you = ctx.you;
     const orders = game.getOrders();
-    if (orders.shot === 'hold' || orders.sails === 'full') return;
 
-    // Everything the loaded guns can actually reach this turn — same range,
-    // arc, land and sight tests the guns themselves use.
+    // The reach is always on the chart, because where your guns will bear is
+    // what you steer by — it is most useful in exactly the turns they cannot
+    // fire. Solid means this turn; dashed means as soon as she is ready,
+    // whether that is waiting on a reload, on a charge being drawn, on
+    // shortening sail, or on you giving the word.
+    const silenced = orders.sails === 'full' || orders.shot === 'hold';
+    const lee = leeSide(you, ctx.wind);
     const reach = new Set();      // fires this turn
-    const pending = new Set();    // would fire once the charge is drawn
+    const pending = new Set();    // will bear here once she can shoot at all
     for (const [id, mount] of mountsOf(you)) {
-      if (!isLoaded(you, id) || !acceptsShot(mount, orders.shot)) continue;
-      const ready = you.guns[id].shot === orders.shot;
+      // In a gale the lee ports are under water; that battery bears on nothing.
+      if (lee && id === lee && !mount.chaser) continue;
+      // Holding fire keeps what is in the barrel, so show that charge's reach.
+      const shot = orders.shot === 'hold' ? you.guns[id].shot : orders.shot;
+      if (!acceptsShot(mount, shot)) continue;
+      const ready = !silenced && isLoaded(you, id) && you.guns[id].shot === shot;
       const into = ready ? reach : pending;
-      const range = rangeOf(mount, orders.shot);
+      const range = rangeOf(mount, shot);
       for (const c of ctx.board.cells()) {
         const d = dist(from, c);
         if (d < 1 || d > range) continue;
