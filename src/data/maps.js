@@ -70,6 +70,12 @@ export const MAPS = {
       ...water('shoal', [[3, 0], [6, 0], [2, 3], [6, 2], [7, 2], [1, 5]]),
     ],
   },
+  packetRun: {
+    id: 'packetRun', name: 'The Windward Passage, moderate',
+    cols: 10, rows: 11, scroll: true,
+    wind: { from: 2, speed: 2, shiftEvery: 4 },
+    islands: [], water: [],
+  },
   gale: {
     id: 'gale', name: 'Mona Gale',
     cols: 10, rows: 11, scroll: true,

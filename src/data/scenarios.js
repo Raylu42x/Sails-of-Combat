@@ -31,10 +31,10 @@ Cripple her rigging, bleed her crew, and take her whole… or be taken.`,
   {
     id: 'chase',
     name: 'The Long Chase',
-    map: 'gale',
-    objective: { type: 'chase', turnLimit: 14, escapeDist: 8 },
+    map: 'packetRun',
+    objective: { type: 'chase', turnLimit: 20, escapeDist: 10 },
     briefing:
-`A packet out of Cartagena runs for open water with the despatches aboard. She is slower than you but she has the legs of you downwind, and a fresh gale is blowing.
+`A packet out of Cartagena runs for open water with the despatches aboard. She is slower than you but she has the legs of you downwind, and there is a steady breeze.
 
 She will not stand and fight. Bring her to action — chase guns bear dead ahead, so keep her under your bowsprit — and cripple her rigging before she is hull down over the horizon.
 
@@ -68,7 +68,7 @@ If she strikes, you may as well not come home.`,
     id: 'retreat',
     name: 'Fighting Retreat',
     map: 'gale',
-    objective: { type: 'escape', turnLimit: 12, escapeDist: 7 },
+    objective: { type: 'escape', turnLimit: 14, escapeDist: 8 },
     briefing:
 `Two of them, to windward, and both faster off the wind than you are. There is no prize here and no glory — only the question of whether the ALACRITY comes home.
 

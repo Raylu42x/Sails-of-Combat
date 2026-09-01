@@ -1,7 +1,7 @@
 import { dist } from '../core/hex.js';
 import { ATT_NAMES, attOf } from '../core/wind.js';
 import { isLoaded, madeFast, mountsOf, shortHanded, simFacing, speedOf } from '../core/ship.js';
-import { acceptsShot, drawTurns, momentumText, wouldDraw } from '../core/combat.js';
+import { acceptsShot, drawTurns, leeSide, momentumText, wouldDraw } from '../core/combat.js';
 
 const SHOT_TAG = { round: 'rnd', chain: 'chn', grape: 'grp', double: 'dbl' };
 
@@ -126,9 +126,13 @@ export function createOrders(root, hintEl, game, onChange) {
     const spd = att === 0 ? 0 : speedOf(you, att, orders.sails, ctx.wind);
     // Each battery shows what is in it: a tick and the charge when it is ready,
     // the turns remaining when it is not.
+    // In a gale the lee ports are under water; that battery is marked, not counted.
+    const lee = leeSide(you, ctx.wind);
     const batteries = mountsOf(you)
       .map(([id, m]) => m.tag + ' ' +
-        (isLoaded(you, id) ? '✓' + (SHOT_TAG[you.guns[id].shot] || you.guns[id].shot) : you.guns[id].reload))
+        (lee && id === lee && !m.chaser ? '~awash'
+          : isLoaded(you, id) ? '✓' + (SHOT_TAG[you.guns[id].shot] || you.guns[id].shot)
+          : you.guns[id].reload))
       .join(' · ');
     // Ordering a charge the guns are not holding costs a turn to draw — but
     // only for a battery that has something in reach to fire it at.
