@@ -1,4 +1,4 @@
-import { angleOf, dist, relBearing } from '../core/hex.js';
+import { DIRS, angleOf, dist, relBearing } from '../core/hex.js';
 import { attOf } from '../core/wind.js';
 import { pathOf } from '../core/movement.js';
 import { isLoaded, mountsOf, simFacing } from '../core/ship.js';
@@ -262,25 +262,75 @@ export function createRenderer(canvas, box, game, layers) {
   // Where the guns will bear from where this turn's orders leave her: only the
   // batteries that are loaded with the charge you have ordered, since a gun
   // holding something else has to be drawn first.
+  // Flat-top hex edge k runs between vertices k and k+1, so the edge facing
+  // neighbour direction d is (d + 4) % 6.
+  const EDGE_OF_DIR = [4, 5, 0, 1, 2, 3];
+
+  function strokeEdge(p, k) {
+    const a1 = Math.PI / 3 * k, a2 = Math.PI / 3 * (k + 1);
+    cx.beginPath();
+    cx.moveTo(p.x + L.S * Math.cos(a1), p.y + L.S * Math.sin(a1));
+    cx.lineTo(p.x + L.S * Math.cos(a2), p.y + L.S * Math.sin(a2));
+    cx.stroke();
+  }
+
   function drawArcs(ctx, from, facing) {
     const you = ctx.you;
     const orders = game.getOrders();
     if (orders.shot === 'hold' || orders.sails === 'full') return;
+
+    // Everything the loaded guns can actually reach this turn — same range,
+    // arc, land and sight tests the guns themselves use.
+    const reach = new Set();      // fires this turn
+    const pending = new Set();    // would fire once the charge is drawn
     for (const [id, mount] of mountsOf(you)) {
       if (!isLoaded(you, id) || !acceptsShot(mount, orders.shot)) continue;
-      if (you.guns[id].shot !== orders.shot) continue;
+      const ready = you.guns[id].shot === orders.shot;
+      const into = ready ? reach : pending;
       const range = rangeOf(mount, orders.shot);
-      cx.fillStyle = mount.chaser ? 'rgba(242,233,216,0.07)' : 'rgba(242,233,216,0.05)';
       for (const c of ctx.board.cells()) {
         const d = dist(from, c);
         if (d < 1 || d > range) continue;
         if (!mount.arcs.includes(relBearing(from, c, facing))) continue;
         if (ctx.board.landAt(c.q, c.r)) continue;
         if (ctx.board.sightBlocked(from, c)) continue;
-        hexPath(L.px(c.q, c.r), 0.9);
-        cx.fill();
+        into.add(c.q + ',' + c.r);
       }
     }
+    for (const k of reach) pending.delete(k);
+    if (!reach.size && !pending.size) return;
+
+    cx.fillStyle = 'rgba(217,164,65,0.07)';
+    for (const k of reach) {
+      const [q, r] = k.split(',').map(Number);
+      hexPath(L.px(q, r), 0.94);
+      cx.fill();
+    }
+
+    // A line round the outside, so the edge of your reach is a place on the
+    // chart rather than something to be inferred from a wash of tint. Only the
+    // edges with no neighbour inside the reach get drawn.
+    const outline = (cells, dashed) => {
+      cx.strokeStyle = C('--brass');
+      cx.lineWidth = dashed ? 1.2 : 1.6;
+      cx.globalAlpha = dashed ? 0.45 : 0.85;
+      cx.setLineDash(dashed ? [4, 4] : []);
+      for (const k of cells) {
+        const [q, r] = k.split(',').map(Number);
+        const p = L.px(q, r);
+        for (let dir = 0; dir < 6; dir++) {
+          const n = DIRS[dir];
+          if (cells.has((q + n.q) + ',' + (r + n.r))) continue;
+          strokeEdge(p, EDGE_OF_DIR[dir]);
+        }
+      }
+      cx.setLineDash([]);
+      cx.globalAlpha = 1;
+    };
+    outline(reach, false);
+    // Dashed: the guns hold a different charge, so this is the reach you will
+    // have once they have drawn it — not this turn.
+    outline(pending, true);
   }
 
   function drawRangeLine(ctx, target) {
