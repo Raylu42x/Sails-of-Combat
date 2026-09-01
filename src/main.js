@@ -88,6 +88,14 @@ const onResize = () => {
   resizePending = true;
   requestAnimationFrame(() => { resizePending = false; renderer.resize(); refresh(); });
 };
+// A burning ship must keep flickering while the player decides what to do
+// about it, so idle turns still need frames.
+(function idleFlames() {
+  const ctx = game.state();
+  if (ctx && !ctx.busy && ctx.ships.some(s => s.fire && !s.struck)) renderer.draw();
+  requestAnimationFrame(idleFlames);
+})();
+
 window.addEventListener('resize', onResize);
 window.addEventListener('orientationchange', onResize);
 

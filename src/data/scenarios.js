@@ -32,7 +32,7 @@ Cripple her rigging, bleed her crew, and take her whole… or be taken.`,
     id: 'chase',
     name: 'The Long Chase',
     map: 'packetRun',
-    objective: { type: 'chase', turnLimit: 20, escapeDist: 10 },
+    objective: { type: 'chase', turnLimit: 16, escapeDist: 8 },
     briefing:
 `A packet out of Cartagena runs for open water with the despatches aboard. She is slower than you but she has the legs of you downwind, and there is a steady breeze.
 

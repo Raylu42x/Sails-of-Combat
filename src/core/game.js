@@ -28,7 +28,7 @@ export function createGame(view) {
     const ships = scenario.ships.map(createShip);
     ctx = {
       scenario, map, wind, ships, board: createBoard(map),
-      turn: 1, over: false, busy: false, log,
+      turn: 1, over: false, busy: false, log, prizes: [],
       you: ships.find(s => s.isYou),
     };
     Object.assign(orders, { helm: 0, sails: 'battle', shot: 'round', grapple: 'no', melee: 'press', cable: 'stand' });
@@ -92,6 +92,70 @@ export function createGame(view) {
     return s.turnMax;
   }
 
+  // Fire is the one thing that actually destroyed ships of this period. It
+  // spreads if it is not fought, it eats hull and hands while it burns, and if
+  // it reaches the magazine there is nothing left to salvage — no prize, no
+  // survivors, no second chance. Fighting it costs you the turn's gunnery.
+  function burn(s) {
+    if (!s.fire || s.struck) return;
+    // The same gamble the player faces: a small fire with the enemy under your
+    // guns is tempting to ignore for one more broadside. She takes that bet too,
+    // and sometimes loses it.
+    const fighting = s.isYou ? orders.shot === 'fireparty' : s.fire >= 2;
+    const hands = crewFrac(s);
+    if (fighting && chance(0.3 + 0.3 * hands)) {
+      s.fire -= 1;
+      log(s.fire > 0
+        ? s.name + '’s people beat the fire back, but it is not out.'
+        : 'The fire aboard ' + s.name + ' is drowned and out.',
+        s.isYou ? 'you' : 'foe');
+      return;
+    }
+    // Untended, or simply beyond them: it eats her.
+    s.hull = Math.max(0, s.hull - 1);
+    if (chance(0.5)) s.crew = Math.max(0, s.crew - 1);
+    if (chance(fighting ? 0.15 : 0.45)) {
+      s.fire += 1;
+      log('The fire aboard ' + s.name + ' takes hold and spreads.', 'big');
+    }
+    if (s.fire >= 3 && chance(0.3)) {
+      s.fire = 0;
+      s.destroyed = true;
+      s.struck = true;
+      s.hull = 0;
+      log(s.name + ' blows up — the fire has reached her magazine. Nothing is left of her.', 'big');
+      bus.emit('exploded', s);
+    }
+  }
+
+  // A beaten ship is worth nothing until she is manned, sailed into port and
+  // adjudicated — that is where privateers were actually paid. Manning her costs
+  // hands you may want later, and a battered hull fetches less, which is what
+  // turns 'fire at her rigging, not her hull' into a money decision.
+  function takePossession(s, ctx) {
+    const prize = ctx.ships.find(o => o.struck && !o.destroyed && !o.taken &&
+      o.side !== s.side && dist(s, o) <= 1);
+    if (!prize) { log('There is no prize alongside to man.', 'you'); return false; }
+    const party = Math.max(2, Math.round(prize.crewMax * 0.25));
+    if (s.crew - party < 3) {
+      log('You have not the hands to man her and still fight your own ship.', 'you');
+      return false;
+    }
+    s.crew -= party;
+    prize.taken = true;
+    prize.side = s.side;
+    const condition = prize.hull / prize.hullMax;
+    prize.value = Math.round(100 * (0.35 + 0.65 * condition) *
+      (0.6 + 0.4 * (prize.rigging / prize.rigMax)));
+    ctx.prizes.push(prize);
+    log('You put ' + party + ' hands aboard ' + prize.name + ' — she is your prize.', 'big');
+    log(condition > 0.6
+      ? prize.name + ' swims well: the court will pay handsomely for her.'
+      : prize.name + ' is knocked about, and the court will price her accordingly.', 'you');
+    bus.emit('prize', prize);
+    return true;
+  }
+
   function endOfTurn() {
     for (const s of ctx.ships) {
       if (s.struck) continue;
@@ -109,6 +173,7 @@ export function createGame(view) {
         }
       }
       if (s.rudderJam > 0) s.rudderJam -= 1;
+      burn(s);
       if (s.anchor === 'weighing') {
         s.anchor = 'up';
         log(s.name + '’s anchor is catted — she is under way again.', s.isYou ? 'you' : 'foe');
@@ -140,6 +205,23 @@ export function createGame(view) {
   }
 
   function finish(verdict) {
+    // What the prize court would pay you for, and what you burned instead.
+    const took = ctx.prizes || [];
+    const lost = ctx.ships.filter(o => o.destroyed && o.side !== ctx.you.side);
+    const unmanned = ctx.ships.filter(o => o.struck && !o.taken && !o.destroyed &&
+      o.side !== ctx.you.side);
+    const notes = [];
+    if (took.length) {
+      notes.push('Prizes taken: ' + took.map(p2 => p2.name + ' (' + p2.value + ')').join(', ') + '.');
+    }
+    if (unmanned.length) {
+      notes.push(unmanned.map(o => o.name).join(', ') +
+        ' struck but was never manned — she is no prize of yours.');
+    }
+    if (lost.length) {
+      notes.push(lost.map(o => o.name).join(', ') + ' blew up. Nothing to sell, and nobody to sell it.');
+    }
+    if (notes.length) verdict.text = verdict.text + '\n\n' + notes.join(' ');
     ctx.over = true;
     bus.emit('finished', verdict);
   }
@@ -177,6 +259,11 @@ export function createGame(view) {
       }
       for (const s of [you, foe]) if (checkStrike(s, ctx)) { log(s.name + ' strikes her colours!', 'big'); bus.emit('struck', s); }
     } else {
+      // Manning a prize is what you do *instead* of sailing this turn — you
+      // heave to alongside her and send a boat. Resolved before anyone moves,
+      // or you would have sailed away from her by the time it happened.
+      you.heaveTo = false;
+      if (orders.grapple === 'prize') you.heaveTo = takePossession(you, ctx);
       const shift = recenter();
       you.sails = orders.sails;
       for (const s of acting) s.sails = aiPlan.get(s.uid).sails;
