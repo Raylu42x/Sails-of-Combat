@@ -1,13 +1,13 @@
 /* Committed single-theme: night gunnery chart. Painted explicitly so it holds
    on any host ground — no light-mode variant by design. */
 :root {
-  --sea: #0B1B24;
-  --panel: #10242F;
-  --chart: #1D3A48;
-  --chart-dim: #152C38;
+  --sea: #0D2940;
+  --panel: #11293A;
+  --chart: #21496B;
+  --chart-dim: #17374F;
   /* Water gets colder and darker as it deepens; land is warm against it, so
      the eye reads coast, bank and open sea apart at a glance. */
-  --sea-shallow: #102C33;
+  --sea-shallow: #14425A;
   --land: #3A4436;
   --land-shore: #4A5340;
   --shoal: #3C6A72;
