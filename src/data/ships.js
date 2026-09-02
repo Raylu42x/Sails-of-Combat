@@ -44,12 +44,14 @@ const swivels = side => ({
 export const SHIP_TYPES = {
   sloop: {
     id: 'sloop', draught: 'shallow', name: 'Bermuda sloop', short: 'sloop',
+    profile: { len: 0.70, beam: 0.26, bluff: 0.10, masts: 1, transom: 0.55 },
     rig: 'fa', speeds: [0, 2, 3, 1], turnMax: 2, tackOdds: 0.8,
     hull: 8, rigging: 8, crew: 12, quality: 1.15,
     mounts: { port: battery('port', 'long'), stbd: battery('stbd', 'long') },
   },
   cutter: {
     id: 'cutter', draught: 'shallow', name: 'Revenue cutter', short: 'cutter',
+    profile: { len: 0.64, beam: 0.24, bluff: 0.08, masts: 1, transom: 0.5 },
     rig: 'fa', speeds: [0, 2, 3, 3], turnMax: 2, tackOdds: 0.85,
     hull: 6, rigging: 7, crew: 9, quality: 1.1,
     mounts: {
@@ -59,6 +61,7 @@ export const SHIP_TYPES = {
   },
   brig: {
     id: 'brig', draught: 'medium', name: 'Brig', short: 'brig',
+    profile: { len: 0.78, beam: 0.33, bluff: 0.35, masts: 2, transom: 0.8 },
     rig: 'sq', speeds: [0, 1, 3, 2], turnMax: 2, tackOdds: 0.6,
     hull: 10, rigging: 9, crew: 11, quality: 1.05,
     mounts: {
@@ -68,6 +71,7 @@ export const SHIP_TYPES = {
   },
   guardacosta: {
     id: 'guardacosta', draught: 'deep', name: 'Guarda costa', short: 'guarda costa',
+    profile: { len: 0.80, beam: 0.36, bluff: 0.45, masts: 3, transom: 0.9 },
     rig: 'sq', speeds: [0, 1, 3, 2], turnMax: 1, tackOdds: 0.5,
     hull: 12, rigging: 10, crew: 10, quality: 1.0,
     mounts: {
@@ -77,6 +81,7 @@ export const SHIP_TYPES = {
   },
   frigate: {
     id: 'frigate', draught: 'deep', name: 'Frigate', short: 'frigate',
+    profile: { len: 0.92, beam: 0.36, bluff: 0.30, masts: 3, transom: 0.85 },
     rig: 'sq', speeds: [0, 1, 3, 2], turnMax: 1, tackOdds: 0.55,
     hull: 16, rigging: 12, crew: 16, quality: 1.1,
     mounts: {
@@ -86,6 +91,7 @@ export const SHIP_TYPES = {
   },
   merchantman: {
     id: 'merchantman', draught: 'medium', name: 'Merchantman', short: 'merchantman',
+    profile: { len: 0.68, beam: 0.42, bluff: 0.6, masts: 2, transom: 0.95 },
     rig: 'sq', speeds: [0, 1, 2, 2], turnMax: 1, tackOdds: 0.4,
     hull: 11, rigging: 8, crew: 7, quality: 0.8,
     mounts: {

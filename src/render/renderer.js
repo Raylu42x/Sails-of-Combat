@@ -116,6 +116,14 @@ export function createRenderer(canvas, box, game, layers) {
   }
 
   function drawSoundings(ctx) {
+    // Sounded water is shallower water: tint it before anything is drawn on
+    // top, so depth reads as a property of the sea rather than a symbol.
+    for (const cell of ctx.map.water || []) {
+      const p = L.px(cell.q, cell.r);
+      hexPath(p, 0.99);
+      cx.fillStyle = C('--sea-shallow');
+      cx.fill();
+    }
     for (const cell of ctx.map.water || []) {
       const p = L.px(cell.q, cell.r);
       if (cell.depth === 'shoal') {
@@ -145,7 +153,8 @@ export function createRenderer(canvas, box, game, layers) {
       hexPath(p, 0.98);
       cx.fillStyle = tall ? C('--land-tall') : C('--land');
       cx.fill();
-      cx.strokeStyle = C('--chart'); cx.lineWidth = 1; cx.stroke();
+      // A shoreline: land meets water at a hard, paler edge, not a grid line.
+      cx.strokeStyle = C('--land-shore'); cx.lineWidth = 1.6; cx.stroke();
       if (tall) { // a peak, to say the sight line stops here
         cx.strokeStyle = C('--ink-dim'); cx.lineWidth = 1.5;
         cx.beginPath();
@@ -163,24 +172,46 @@ export function createRenderer(canvas, box, game, layers) {
     cx.save();
     cx.translate(p.x, p.y);
     cx.rotate(angleOf(s.facing));
-    const Lh = L.S * 0.72, W2 = L.S * 0.32;
+    // Every class is drawn from her own profile: a sloop is a sharp sliver, a
+    // merchantman is a fat bluff-bowed tub, a frigate is long and lean. You can
+    // tell what you are looking at without reading the card.
+    const prof = (s.type && s.type.profile) || { len: 0.72, beam: 0.32, bluff: 0.25, masts: 2, transom: 0.85 };
+    const Lh = L.S * prof.len, W2 = L.S * prof.beam;
+    const bluff = prof.bluff;          // 0 = a knife, 1 = a barrel
+    const stern = -Lh * 0.8, tw = W2 * prof.transom;
     cx.globalAlpha = s.struck ? 0.35 : 1;
     cx.fillStyle = color;
     cx.beginPath();
-    cx.moveTo(Lh, 0);
-    cx.lineTo(Lh * 0.25, -W2);
-    cx.lineTo(-Lh * 0.8, -W2 * 0.85);
-    cx.lineTo(-Lh * 0.8, W2 * 0.85);
-    cx.lineTo(Lh * 0.25, W2);
+    cx.moveTo(Lh, 0);                                        // stem
+    cx.quadraticCurveTo(Lh * (0.75 - bluff * 0.5), -W2 * (0.35 + bluff * 0.65),
+                        Lh * (0.2 + bluff * 0.1), -W2);      // port bow
+    cx.lineTo(stern, -tw);                                   // port side
+    cx.lineTo(stern, tw);                                    // transom
+    cx.lineTo(Lh * (0.2 + bluff * 0.1), W2);                 // starboard side
+    cx.quadraticCurveTo(Lh * (0.75 - bluff * 0.5), W2 * (0.35 + bluff * 0.65), Lh, 0);
     cx.closePath(); cx.fill();
+
+    // Masts: how many is the class, how much canvas is the sail order.
     cx.strokeStyle = C('--sea'); cx.lineWidth = 2;
-    const n = s.sails === 'full' ? 3 : (s.sails === 'battle' ? 2 : 1);
-    for (let i = 0; i < n; i++) {
+    const canvas = s.sails === 'full' ? 1 : (s.sails === 'battle' ? 0.7 : 0.42);
+    const masts = prof.masts;
+    for (let i = 0; i < masts; i++) {
+      const x = masts === 1 ? -Lh * 0.1
+        : stern * 0.6 + (i / (masts - 1)) * (Lh * 0.45 - stern * 0.6);
+      const yard = W2 * (0.5 + 0.55 * canvas);
       cx.beginPath();
-      cx.moveTo(-Lh * 0.5 + i * Lh * 0.4, -W2 * 0.55);
-      cx.lineTo(-Lh * 0.5 + i * Lh * 0.4, W2 * 0.55);
+      cx.moveTo(x, -yard);
+      cx.lineTo(x, yard);
       cx.stroke();
     }
+    // A square rig carries a long bowsprit; a fore-and-aft craft's is finer.
+    cx.lineWidth = s.rig === 'sq' ? 1.6 : 1.2;
+    cx.strokeStyle = color;
+    cx.beginPath();
+    cx.moveTo(Lh, 0);
+    cx.lineTo(Lh + L.S * (s.rig === 'sq' ? 0.2 : 0.14), 0);
+    cx.stroke();
+    cx.strokeStyle = C('--sea'); cx.lineWidth = 2;
     if (s.isYou) {
       // Battery state: a bright strake for each loaded broadside, a bright
       // pip fore or aft for a loaded chaser. Local +y is starboard.

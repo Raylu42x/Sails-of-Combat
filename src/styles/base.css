@@ -5,10 +5,14 @@
   --panel: #10242F;
   --chart: #1D3A48;
   --chart-dim: #152C38;
-  --land: #24404A;
+  /* Water gets colder and darker as it deepens; land is warm against it, so
+     the eye reads coast, bank and open sea apart at a glance. */
+  --sea-shallow: #102C33;
+  --land: #3A4436;
+  --land-shore: #4A5340;
   --shoal: #3C6A72;
   --anchorage: rgba(60, 106, 114, 0.18);
-  --land-tall: #35525A;
+  --land-tall: #56603F;
   --ink: #D8E4E8;
   --ink-dim: #7E97A2;
   --brass: #D9A441;
