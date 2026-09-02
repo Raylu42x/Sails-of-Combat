@@ -76,8 +76,12 @@ export function evaluate(ctx) {
     case 'capture': {
       const prize = ships.find(s => s.role === 'prize');
       if (prize && prize.struck) {
-        return { done: true, won: true, title: 'Cut Out',
-          text: 'The ' + prize.name + ' is yours. Cut her cable, set the topsails, and take her out under the guns of the shore.' };
+        if (prizeInReach(ctx)) return null;   // she has struck; go and take her
+        const taken = prize.taken;
+        return { done: true, won: taken, title: taken ? 'Cut Out' : 'She Struck, and Drifted',
+          text: taken
+            ? 'The ' + prize.name + ' is yours. Cut her cable, set the topsails, and take her out under the guns of the shore.'
+            : 'The ' + prize.name + ' struck — but you never put a man aboard her, and she is no prize of yours.' };
       }
       if (obj.turnLimit && turn > obj.turnLimit) {
         return { done: true, won: false, title: 'The Alarm Is Given',
