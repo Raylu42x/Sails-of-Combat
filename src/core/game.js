@@ -63,9 +63,19 @@ export function createGame(view) {
     const centre = { q: Math.floor(ctx.map.cols / 2), r: Math.floor(ctx.map.rows / 5) };
     const dq = centre.q - mid.q, dr = centre.r - mid.r;
     if (!dq && !dr) return null;
-    const moved = ctx.ships.filter(s => !s.struck);
-    if (moved.some(s => !ctx.board.inBounds(s.q + dq, s.r + dr))) return null;
-    for (const s of moved) { s.q += dq; s.r += dr; }
+    // Everyone rides the scroll, hulks included — otherwise a struck ship
+    // holds her place in the frame and the fight keeps ploughing into her.
+    // Only the living need to stay on the chart: a hulk carried over the edge
+    // has fallen astern for good.
+    if (ctx.ships.some(s => !s.struck && !ctx.board.inBounds(s.q + dq, s.r + dr))) return null;
+    for (const s of ctx.ships) {
+      if (s.offBoard) continue;
+      s.q += dq; s.r += dr;
+      if (s.struck && !ctx.board.inBounds(s.q, s.r)) {
+        s.offBoard = true;
+        log(s.name + (s.taken ? '’s prize crew drops her astern, out of the fight.' : '’s hulk falls astern and is lost to view.'), 'turnhead');
+      }
+    }
     const u = unitPos(dq, dr), u0 = unitPos(0, 0);
     return { dq, dr, x: u.x - u0.x, y: u.y - u0.y };
   }

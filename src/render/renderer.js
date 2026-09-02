@@ -514,6 +514,7 @@ export function createRenderer(canvas, box, game, layers) {
 
     for (const s of ctx.ships) {
       if (s.isYou) continue;
+      if (s.offBoard) { lastSeen.delete(s.uid); continue; } // fallen astern, over the horizon
       const seen = game.visibleTo(ctx.you, s);
       if (seen) { lastSeen.set(s.uid, { q: s.q, r: s.r }); drawShip(ctx, s); }
       else {
