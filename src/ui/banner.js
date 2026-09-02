@@ -12,6 +12,17 @@ export function createBanner(el, onStart) {
   const textEl = el.querySelector('#bText');
   const listEl = el.querySelector('#bList');
   const btn = el.querySelector('#bBtn');
+  // The after-action report: stats and the whole log, verdict mode only.
+  const statsEl = document.createElement('div');
+  statsEl.className = 'stats';
+  const aarEl = document.createElement('div');
+  aarEl.className = 'aarlog';
+  textEl.after(statsEl, aarEl);
+  const showAar = v => {
+    statsEl.style.display = v ? '' : 'none';
+    aarEl.style.display = v ? '' : 'none';
+  };
+  showAar(false);
   const altBtn = el.querySelector('#bAlt');
   let pending = SCENARIOS[0];
   let current = SCENARIOS[0];
@@ -43,6 +54,7 @@ export function createBanner(el, onStart) {
   function showBriefing(sc) {
     pending = sc;
     mode = 'briefing';
+    showAar(false);
     titleEl.textContent = sc.name;
     titleEl.style.color = 'var(--brass)';
     textEl.textContent = sc.briefing;
@@ -55,13 +67,33 @@ export function createBanner(el, onStart) {
     show();
   }
 
-  function showVerdict(v) {
+  function showVerdict(v, history) {
     if (v.won) progress.record(current.id);
     mode = 'verdict';
     el.dataset.inAction = '0';
     titleEl.textContent = v.title;
     titleEl.style.color = v.won ? 'var(--brass)' : v.draw ? 'var(--ink)' : 'var(--signal)';
     textEl.textContent = v.text;
+    statsEl.innerHTML = '';
+    for (const [key, val] of v.stats || []) {
+      const row = document.createElement('div');
+      row.className = 'srow';
+      row.innerHTML = '<span class="k"></span><span class="v"></span>';
+      row.querySelector('.k').textContent = key;
+      row.querySelector('.v').textContent = val;
+      statsEl.appendChild(row);
+    }
+    aarEl.innerHTML = '';
+    for (const l of history || []) {
+      const dd = document.createElement('div');
+      if (l.cls) dd.className = l.cls;
+      dd.textContent = l.msg;
+      aarEl.appendChild(dd);
+    }
+    showAar(true);
+    statsEl.style.display = (v.stats && v.stats.length) ? '' : 'none';
+    aarEl.style.display = (history && history.length) ? '' : 'none';
+    aarEl.scrollTop = aarEl.scrollHeight;
     btn.textContent = 'Sail again';
     primaryFn = () => start(pending);
     altBtn.style.display = 'none';
@@ -73,6 +105,7 @@ export function createBanner(el, onStart) {
   function showPicker() {
     mode = 'picker';
     el.dataset.inAction = '1';
+    showAar(false);
     pending = current;
     titleEl.textContent = 'Levels';
     titleEl.style.color = 'var(--ink)';

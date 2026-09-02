@@ -28,6 +28,8 @@ export function createGame(view) {
     const ships = scenario.ships.map(createShip);
     ctx = {
       scenario, map, wind, ships, board: createBoard(map),
+      tally: { fired: 0, hits: 0, dealt: { hull: 0, rig: 0, crew: 0 },
+        taken: { hull: 0, rig: 0, crew: 0 }, meleeDealt: 0, meleeLost: 0 },
       turn: 1, over: false, busy: false, log, prizes: [], afterTurns: 0,
       you: ships.find(s => s.isYou),
     };
@@ -235,6 +237,22 @@ export function createGame(view) {
       notes.push(lost.map(o => o.name).join(', ') + ' blew up. Nothing to sell, and nobody to sell it.');
     }
     if (notes.length) verdict.text = verdict.text + '\n\n' + notes.join(' ');
+    // The after-action report: what the fight cost and what it paid.
+    const t = ctx.tally, d = t.dealt, k = t.taken;
+    verdict.stats = [
+      ['Turns', String(ctx.turn)],
+      ['Broadsides', t.fired + ' fired · ' + t.hits + ' told' +
+        (t.fired ? ' (' + Math.round(100 * t.hits / t.fired) + '%)' : '')],
+      ['Damage dealt', d.hull + ' hull · ' + d.rig + ' rigging · ' + d.crew + ' crew'],
+      ['Damage taken', k.hull + ' hull · ' + k.rig + ' rigging · ' + k.crew + ' crew'],
+      ['Hands', ctx.you.crew + ' of ' + ctx.you.crewMax + ' fit for duty'],
+    ];
+    if (t.meleeDealt || t.meleeLost) {
+      verdict.stats.push(['The melee', t.meleeDealt + ' of theirs down · ' + t.meleeLost + ' of yours']);
+    }
+    if (took.length) {
+      verdict.stats.push(['Prize money', took.reduce((n, p2) => n + (p2.value || 0), 0) + ' for the court to pay']);
+    }
     ctx.over = true;
     bus.emit('finished', verdict);
   }
@@ -258,6 +276,8 @@ export function createGame(view) {
       const m = ctx.boarding.momentum;
       const foeAct = m <= -2 ? 'press' : m >= 2 ? 'hold' : (crewFrac(foe) < 0.4 ? 'hold' : 'boarders');
       const res = boardingRound(ctx.boarding, you, foe, orders.melee, foeAct, log);
+      ctx.tally.meleeDealt += res.bLoss || 0;
+      ctx.tally.meleeLost += res.aLoss || 0;
       await view.melee(you, foe, res);
       if (res.parted) ctx.boarding = null;
       if (res.carried) {
@@ -308,6 +328,20 @@ export function createGame(view) {
       fireAll(you, ctx, orders.shot, results);
       for (const s of acting) fireAll(s, ctx, aiPlan.get(s.uid).shot, results);
       for (const r of results) {
+        if (r.s === you && !r.none) {
+          ctx.tally.fired += 1;
+          if (!r.miss) {
+            ctx.tally.hits += 1;
+            ctx.tally.dealt.hull += r.hull || 0;
+            ctx.tally.dealt.rig += r.rig || 0;
+            ctx.tally.dealt.crew += r.crew || 0;
+          }
+        }
+        if (r.t === you && !r.none && !r.miss) {
+          ctx.tally.taken.hull += r.hull || 0;
+          ctx.tally.taken.rig += r.rig || 0;
+          ctx.tally.taken.crew += r.crew || 0;
+        }
         await view.animateShot(r, applyFireResult, log);
         if (r.t && checkStrike(r.t, ctx)) { log(r.t.name + ' strikes her colours!', 'big'); bus.emit('struck', r.t); }
         bus.emit('change', ctx);

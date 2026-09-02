@@ -215,3 +215,31 @@
   .level-name { font-size: 10.5px; letter-spacing: 0.1em; }
   .turn-line { font-size: 9px; }
 }
+
+/* --- the after-action report on the verdict screen --- */
+.banner { overflow-y: auto; }
+.banner .stats {
+  width: 100%; max-width: 46ch;
+  font-family: "IBM Plex Mono", monospace; font-size: 12px; text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+.banner .stats .srow {
+  display: flex; justify-content: space-between; gap: 12px;
+  border-bottom: 1px solid var(--chart); padding: 3px 0;
+}
+.banner .stats .k {
+  color: var(--ink-dim); text-transform: uppercase;
+  font-family: "Barlow Condensed", sans-serif; font-size: 11px; letter-spacing: 0.1em;
+  align-self: center; white-space: nowrap;
+}
+.banner .aarlog {
+  width: 100%; max-width: 46ch; max-height: 26vh; overflow-y: auto;
+  border: 1px solid var(--chart); background: var(--panel);
+  padding: 8px 10px;
+  font-family: "IBM Plex Mono", monospace; font-size: 11px; line-height: 1.55;
+  color: var(--ink-dim); text-align: left;
+}
+.aarlog .you { color: var(--brass); }
+.aarlog .foe { color: var(--signal); }
+.aarlog .big { color: var(--flash); }
+.aarlog .turnhead { color: var(--ink); }

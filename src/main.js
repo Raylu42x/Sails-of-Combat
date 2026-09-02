@@ -48,7 +48,7 @@ game.on('reset', ctx => {
 });
 game.on('change', refresh);
 game.on('busy', busy => { execBtn.disabled = busy || game.state().over; });
-game.on('finished', v => banner.showVerdict(v));
+game.on('finished', v => banner.showVerdict(v, logView.history()));
 game.on('turn', () => sfx.bell());
 game.on('struck', () => sfx.strike());
 game.on('grappled', () => sfx.grapple());
