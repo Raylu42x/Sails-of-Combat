@@ -132,6 +132,15 @@ export function createGame(view) {
     }
   }
 
+  // What the prize court will pay for her, by the state she is in: a sound hull
+  // and a whole rig fetch full price, a battered wreck very little. Used by both
+  // ways of taking a ship — putting a prize crew aboard, and carrying her deck.
+  function priceOf(prize) {
+    const condition = prize.hull / prize.hullMax;
+    return Math.round(100 * (0.35 + 0.65 * condition) *
+      (0.6 + 0.4 * (prize.rigging / prize.rigMax)));
+  }
+
   // A beaten ship is worth nothing until she is manned, sailed into port and
   // adjudicated — that is where privateers were actually paid. Manning her costs
   // hands you may want later, and a battered hull fetches less, which is what
@@ -149,8 +158,7 @@ export function createGame(view) {
     prize.taken = true;
     prize.side = s.side;
     const condition = prize.hull / prize.hullMax;
-    prize.value = Math.round(100 * (0.35 + 0.65 * condition) *
-      (0.6 + 0.4 * (prize.rigging / prize.rigMax)));
+    prize.value = priceOf(prize);
     ctx.prizes.push(prize);
     log('You put ' + party + ' hands aboard ' + prize.name + ' — she is your prize.', 'big');
     log(condition > 0.6
@@ -277,8 +285,7 @@ export function createGame(view) {
           foe.taken = true;
           foe.side = you.side;
           const condition = foe.hull / foe.hullMax;
-          foe.value = Math.round(100 * (0.35 + 0.65 * condition) *
-            (0.6 + 0.4 * (foe.rigging / foe.rigMax)));
+          foe.value = priceOf(foe);
           ctx.prizes.push(foe);
           log(condition > 0.6
             ? foe.name + ' swims well: the court will pay handsomely for her.'
