@@ -1,7 +1,7 @@
 import { dist } from '../core/hex.js';
 import { ATT_NAMES, attOf } from '../core/wind.js';
 import { isLoaded, madeFast, mountsOf, shortHanded, simFacing, speedOf } from '../core/ship.js';
-import { acceptsShot, drawTurns, leeSide, momentumText, wouldDraw } from '../core/combat.js';
+import { acceptsShot, drawTurns, grappleOdds, leeSide, momentumText, swivelsReady, wouldDraw } from '../core/combat.js';
 
 const SHOT_TAG = { round: 'rnd', chain: 'chn', grape: 'grp', double: 'dbl' };
 // A glyph per charge: a ball, two balls linked by a bar, a scatter of small
@@ -45,6 +45,7 @@ export function createOrders(root, hintEl, game, onChange) {
     const you = ctx.you;
     const orders = game.getOrders();
     const grappled = !!you.grappledTo;
+    paintMomentum(ctx);
     const normal = document.getElementById('ordersNormal');
     const boarding = document.getElementById('ordersBoarding');
     const area = document.getElementById('ordersArea');
@@ -89,6 +90,18 @@ export function createOrders(root, hintEl, game, onChange) {
     const far = !nearest || dist(you, nearest) > 2;
     const grapBtn = document.getElementById('grapBtn');
     grapBtn.disabled = far;
+    // The hooks are a gamble with knowable odds: she sheers off with way on
+    // her, and cannot when she is crippled. Say so, so the loop is learnable.
+    if (!far && nearest) {
+      const odds = grappleOdds(you, nearest, ctx);
+      grapBtn.title = odds.slow
+        ? nearest.name + ' is crippled and cannot sheer off — the hooks will very likely bite (' +
+          Math.round(odds.p * 100) + '%)'
+        : nearest.name + ' still has way on her — the hooks will likely miss (' +
+          Math.round(odds.p * 100) + '%). Cripple her rigging first.';
+    } else {
+      grapBtn.title = 'She is beyond the throw of a hook';
+    }
     // A ship that has struck is a prize, but only if you put people aboard her.
     const prizeBtn = document.getElementById('prizeBtn');
     const beaten = ctx.ships.find(o => o.struck && !o.destroyed && !o.taken &&
@@ -128,6 +141,25 @@ export function createOrders(root, hintEl, game, onChange) {
     updateHint(ctx, nearest, needsHelm);
   }
 
+  // Seven ticks with the middle one neutral: three her way, three yours, and
+  // the ends are the goal line. Carrying the deck at ±3 stops being a surprise.
+  function paintMomentum(ctx) {
+    const bar = document.getElementById('momentum');
+    if (!bar) return;
+    const fight = ctx.boarding;
+    const m = fight ? fight.momentum : 0;
+    const ticks = [...bar.querySelectorAll('.m-tick')];
+    ticks.forEach((t, i) => {
+      const slot = i - 3;                       // -3 hers … 0 even … +3 yours
+      const held = m > 0 ? (slot > 0 && slot <= m) : m < 0 ? (slot < 0 && slot >= m) : slot === 0;
+      t.classList.toggle('on-you', held && m > 0);
+      t.classList.toggle('on-foe', held && m < 0);
+      t.classList.toggle('on-even', held && m === 0);
+    });
+    bar.classList.toggle('at-goal', Math.abs(m) >= 2);
+    bar.title = fight ? momentumText(m) : 'the ships are lashed together';
+  }
+
   function updateHint(ctx, nearest, needsHelm) {
     if (ctx.over) return;
     const you = ctx.you;
@@ -140,9 +172,14 @@ export function createOrders(root, hintEl, game, onChange) {
     }
     if (you.grappledTo) {
       const f = ctx.boarding;
-      hintEl.textContent = 'Boarding ' + you.grappledTo.name + ' — ' +
+      const her = you.grappledTo;
+      const swiv = [];
+      if (swivelsReady(you)) swiv.push('your swivels loaded with grape');
+      if (swivelsReady(her)) swiv.push('HER swivels loaded');
+      hintEl.textContent = 'Boarding ' + her.name + ' — ' +
         (f ? momentumText(f.momentum) : 'the ships are lashed together') +
-        ' · your ' + you.crew + ' hands to her ' + you.grappledTo.crew;
+        ' · your ' + you.crew + ' hands to her ' + her.crew +
+        (swiv.length ? ' · ' + swiv.join(', ') : '');
       return;
     }
     const att = attOf(simFacing(you, orders.helm), ctx.wind.from);
