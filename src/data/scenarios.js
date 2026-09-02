@@ -134,6 +134,62 @@ Light airs, a bank on either hand, and holding ground under the headland if you 
         q: 8, r: 4, facing: 0, stats: { hull: 5, crew: 5, quality: 0.8 } },
     ],
   },
+  {
+    id: 'purse',
+    name: 'The Amsterdam’s Purse',
+    map: 'packetRun',
+    objective: { type: 'capture', turnLimit: 20 },
+    briefing:
+`The Dutch merchantman AMSTERDAM is deep-laden and slow — the richest hull you will see this season. Her master has bought himself a brig of war for company, and the brig means to earn her fee.
+
+Every shot into the AMSTERDAM’s hull is money you are burning: the court pays for the ship you bring in, not the one you wrecked. Deal with the escort as you must, but take the purse whole.
+
+Board her or force her colours down before she is gone.`,
+    ships: [
+      { type: 'cutter', side: 'friendly', role: 'player', name: 'Adder', q: 4, r: 6, facing: 0 },
+      { type: 'merchantman', side: 'hostile', role: 'prize', ai: 'flee', name: 'Amsterdam', q: 4, r: 1, facing: 0,
+        stats: { crew: 5, quality: 0.9 } },
+      { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Zeehond', q: 7, r: 2, facing: 4,
+        stats: { crew: 7, quality: 0.9 } },
+    ],
+  },
+  {
+    id: 'squall',
+    name: 'Powder and Spray',
+    map: 'gale',
+    objective: { type: 'duel', breakOffDist: 10 },
+    briefing:
+`You have the brig RATTLER in a full gale, and the French brig SANS PAREIL has the same wind and the same idea.
+
+Blowing this hard, the ship heels: the battery on your lee side is under water and will not open. Which gun bears is decided by the tack you are on — and every tack is a gamble in a gale. Watch her lee side, take the weather gage, and put your iron where she cannot answer it.
+
+Square rig runs down the sea handsomely, and claws off it badly. Do not let the wind sail you.`,
+    ships: [
+      { type: 'brig', side: 'friendly', role: 'player', name: 'Rattler', q: 4, r: 6, facing: 1 },
+      { type: 'brig', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Sans Pareil', q: 5, r: 0, facing: 3,
+        stats: { quality: 1.0 } },
+    ],
+  },
+  {
+    id: 'ratrun',
+    name: 'The Rat Run',
+    map: 'cays',
+    objective: { type: 'escape', turnLimit: 10, escapeDist: 7 },
+    briefing:
+`For once the fat hull is yours. The MARGUERITE is loaded to her marks with sugar, you have six popguns and a crew who signed on to sail, not to fight — and two hunters have the scent.
+
+You cannot outfight them, and in open water you cannot outrun them. But the tall cays blind them, the banks bar them, and a ship they cannot see is a ship they cannot take. Thread the rat run, break their line of sight, and be gone.
+
+Get clear, or last until dark.`,
+    ships: [
+      { type: 'merchantman', side: 'friendly', role: 'player', name: 'Marguerite', q: 2, r: 8, facing: 1,
+        stats: { crew: 8 } },
+      { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Vulture', q: 9, r: 0, facing: 3,
+        stats: { hull: 4, crew: 5, quality: 0.9 } },
+      { type: 'sloop', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Kite', q: 6, r: 0, facing: 3,
+        stats: { hull: 5, crew: 6, quality: 0.9 } },
+    ],
+  },
 ];
 
 export const scenarioById = id => SCENARIOS.find(s => s.id === id) || SCENARIOS[0];
