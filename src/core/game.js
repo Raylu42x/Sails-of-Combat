@@ -269,6 +269,22 @@ export function createGame(view) {
           ? 'Her quarterdeck is carried — the colours come down and the ship is yours!'
           : 'They have carried your quarterdeck. The Alacrity is taken.', 'big');
         bus.emit('struck', res.carried);
+        // A deck carried by boarding IS possession — the boarders standing on
+        // her quarterdeck are the prize crew, their toll already paid in the
+        // melee. Without this she struck but never counted as taken, and the
+        // most complete capture in the game was the one that paid nothing.
+        if (res.carried === foe) {
+          foe.taken = true;
+          foe.side = you.side;
+          const condition = foe.hull / foe.hullMax;
+          foe.value = Math.round(100 * (0.35 + 0.65 * condition) *
+            (0.6 + 0.4 * (foe.rigging / foe.rigMax)));
+          ctx.prizes.push(foe);
+          log(condition > 0.6
+            ? foe.name + ' swims well: the court will pay handsomely for her.'
+            : foe.name + ' is knocked about, and the court will price her accordingly.', 'you');
+          bus.emit('prize', foe);
+        }
       }
       for (const s of [you, foe]) if (checkStrike(s, ctx)) { log(s.name + ' strikes her colours!', 'big'); bus.emit('struck', s); }
     } else {
