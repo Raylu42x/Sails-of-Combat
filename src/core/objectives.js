@@ -9,10 +9,12 @@ const alive = (ships, pred) => ships.filter(s => !s.struck && pred(s));
 // ship still floats within reach and you have hands enough to man her, the
 // action stays open so you can lay alongside and take possession. The player
 // ends it with the End action button when they are done, or by sailing away.
-const PRIZE_REACH = 4;
-// You get a few turns to lay alongside her, not the rest of the night. After
-// that she has drifted off in the dark, and the chance is gone.
-const PRIZE_WINDOW = 3;
+// She must be near enough to reach when the fighting ends, and you get a few
+// turns to lay alongside her — not the rest of the night. Terrain charts made
+// the old 4-and-3 cruel: a hulk two banks away was unreachable before the
+// window shut, and one five hexes off closed the action with no window at all.
+const PRIZE_REACH = 6;
+const PRIZE_WINDOW = 5;
 export function prizeInReach(ctx) {
   const you = ctx.you;
   if (!you || you.struck || ctx.ended) return null;
