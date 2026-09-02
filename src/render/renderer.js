@@ -204,13 +204,17 @@ export function createRenderer(canvas, box, game, layers) {
       cx.lineTo(x, yard);
       cx.stroke();
     }
-    // A square rig carries a long bowsprit; a fore-and-aft craft's is finer.
-    cx.lineWidth = s.rig === 'sq' ? 1.6 : 1.2;
-    cx.strokeStyle = color;
+    // A square rig carries a longer bowsprit than a fore-and-aft craft. Drawn
+    // as a short filled taper off the stem rather than a thin line: in the hull
+    // colour, a line is indistinguishable from the course arrow, and the moment
+    // you put the helm over it is left pointing the old way like a stray mark.
+    const sprit = L.S * (s.rig === 'sq' ? 0.13 : 0.09);
+    cx.fillStyle = color;
     cx.beginPath();
-    cx.moveTo(Lh, 0);
-    cx.lineTo(Lh + L.S * (s.rig === 'sq' ? 0.2 : 0.14), 0);
-    cx.stroke();
+    cx.moveTo(Lh + sprit, 0);
+    cx.lineTo(Lh - L.S * 0.02, -W2 * 0.16);
+    cx.lineTo(Lh - L.S * 0.02, W2 * 0.16);
+    cx.closePath(); cx.fill();
     cx.strokeStyle = C('--sea'); cx.lineWidth = 2;
     if (s.isYou) {
       // Battery state: a bright strake for each loaded broadside, a bright
