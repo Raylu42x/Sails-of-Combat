@@ -5,6 +5,7 @@ import { isLoaded, mountsOf } from './ship.js';
 import { draughtOf } from '../data/ships.js';
 import { acceptsShot, rangeOf } from './combat.js';
 import { pathOf } from './movement.js';
+import { distanceField } from './route.js';
 
 const nearestEnemy = (s, ctx) => ctx.ships
   .filter(o => !o.struck && o.side !== s.side)
@@ -25,6 +26,11 @@ export function aiOrders(s, ctx) {
   for (let h = -s.turnMax; h <= s.turnMax; h++) helms.push(h);
   let best = null;
 
+  // How far every hex is from her mark, sailed rather than measured — so a bank
+  // between the two ships is something to sail round, not a wall to sit behind.
+  const field = distanceField(ctx.board, foe, s);
+  const ward2 = ward ? distanceField(ctx.board, ward, s) : null;
+
   for (const helm of helms) {
     let f = s.facing, risky = false;
     const dir = Math.sign(helm);
@@ -36,6 +42,7 @@ export function aiOrders(s, ctx) {
       const end = path.length ? path[path.length - 1] : { q: s.q, r: s.r };
       const pos = { q: end.q, r: end.r };
       const d = dist(pos, foe);
+      const sailed = field.at(pos.q, pos.r);   // distance as she would have to sail it
       let score = 0;
 
       // Can anything shoot from there?
@@ -45,21 +52,28 @@ export function aiOrders(s, ctx) {
         if (m.arcs.includes(relBearing(pos, foe, f))) armed = true;
       }
       if (mood === 'flee') {
-        score += d * 2.2;                                  // put water between us
+        score += Math.min(sailed, 12) * 2.2;               // put water between us
         if (armed && d <= 2) score += 2;                   // a parting shot is welcome
         if (sails === 'full') score += 2.5;
         if (sails === 'takein') score -= 3;
       } else if (mood === 'escort' && ward) {
-        score -= Math.abs(dist(pos, ward) - 1.5) * 2.5;    // stay alongside the charge
-        score -= Math.abs(d - 1.5);
+        score -= Math.abs(ward2.at(pos.q, pos.r) - 1.5) * 2.5; // stay by the charge
+        score -= Math.abs(sailed - 1.5);
         if (armed && d <= 3) score += 4;
       } else {
-        score -= Math.abs(d - 1.5) * 2;                    // lay her alongside
+        score -= Math.abs(sailed - 1.5) * 2;               // lay her alongside
         if (armed && d <= 3) score += 6;
         if (sails === 'full' && armed && d <= 3) score -= 5; // full sail silences the guns
         if (sails === 'takein') score -= 2;
       }
       if (ctx.board.shotBlocked(pos, foe)) score += mood === 'flee' ? 3 : -3; // land in the way
+      // A ship lying motionless is a ship not being handled. Near a bank every
+      // move either touches the ground or opens the range, so standing still
+      // used to win the argument every turn and she would park there for the
+      // rest of the action — a free target, and an infinite staring contest.
+      // Wanting way on breaks the tie, and wanting it more each turn she has
+      // sat there makes her work round the shoal rather than sulk beside it.
+      if (!path.length) score -= 2.5 + 1.6 * (s.idleTurns || 0);
       // A deep-draught ship will not follow a sloop over a bank, and knows it.
       if (ctx.board.isShoal(pos.q, pos.r)) score -= 5 * draughtOf(s);
       if (attOf(f, wind.from) === 0) score -= 100;

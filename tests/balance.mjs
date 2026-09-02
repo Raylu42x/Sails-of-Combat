@@ -5,7 +5,7 @@
 import { createGame } from '../src/core/game.js';
 import { SCENARIOS } from '../src/data/scenarios.js';
 import { aiOrders } from '../src/core/ai.js';
-import { dist } from '../src/core/hex.js';
+import { dist, dirBetween } from '../src/core/hex.js';
 
 const RUNS = Number(process.argv[2]) || 60;
 const noopView = {
@@ -42,10 +42,30 @@ for (const sc of SCENARIOS) {
         game.setOrder('helm', String(plan.helm));
         game.setOrder('sails', plan.sails);
         game.setOrder('shot', plan.shot);
+        // aiOrders only ever looks at ships still fighting, so once she strikes
+        // the reference player has nothing to steer at. Close on the prize
+        // instead — she is worth nothing at three hexes.
+        const floating = ctx.ships.find(o => o.struck && !o.destroyed && !o.taken &&
+          o.side !== you.side && dist(you, o) <= 5);
+        if (floating && dist(you, floating) > 1) {
+          let t = (dirBetween(you, floating) - you.facing + 6) % 6;
+          if (t > 3) t -= 6;
+          game.setOrder('helm', String(Math.max(-you.turnMax, Math.min(you.turnMax, t))));
+          game.setOrder('sails', 'battle');
+          game.setOrder('shot', 'hold');
+        }
         const foe = ctx.ships.filter(s => !s.struck && s.side !== you.side)
           .sort((a, b) => dist(you, a) - dist(you, b))[0];
+        // A beaten ship alongside is worth nothing until she is manned, and in
+        // a chase she carries the whole point of the mission — so the reference
+        // player secures her rather than sailing past.
+        const prize = ctx.ships.find(o => o.struck && !o.destroyed && !o.taken &&
+          o.side !== you.side && dist(you, o) <= 1);
         const worthBoarding = foe && dist(you, foe) === 1 && you.crew > foe.crew * 1.15;
-        game.setOrder('grapple', worthBoarding ? 'yes' : 'no');
+        game.setOrder('grapple', prize ? 'prize' : worthBoarding ? 'yes' : 'no');
+        // Break off only when there is nothing left to fight AND nothing left
+        // to take — a prize three hexes off is still worth closing on.
+        if (!foe && !floating && game.fightOver()) { game.endAction(); continue; }
       }
       await game.execute();
     }

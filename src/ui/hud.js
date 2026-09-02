@@ -63,7 +63,8 @@ export function createHud(shipsEl, turnEl, game) {
       card.innerHTML =
         '<div class="name"></div>' +
         ['Hull', 'Rig', 'Crew'].map(l =>
-          '<div class="bar"><span class="lb">' + l + '</span><div class="track">' +
+          '<div class="bar"><span class="lb"><span class="lb-full">' + l +
+          '</span><span class="lb-abbr">' + l[0] + '</span></span><div class="track">' +
           '<div class="fill" data-k="' + l.toLowerCase() + '"></div></div></div>').join('');
       card.querySelector('.name').textContent = s.name + ' · ' + s.type.short;
       card.addEventListener('pointerdown', () => {
@@ -90,7 +91,16 @@ export function createHud(shipsEl, turnEl, game) {
     }
     const obj = ctx.scenario.objective || {};
     const clock = obj.turnLimit ? ' / ' + obj.turnLimit : '';
-    turnEl.textContent = 'Turn ' + ctx.turn + clock + ' · ' + windLabel(ctx.wind);
+    // Which action you are sailing, above the turn and the weather. You can
+    // start one from the level list days later and have no idea which it was.
+    turnEl.innerHTML = '';
+    const name = document.createElement('div');
+    name.className = 'level-name';
+    name.textContent = ctx.scenario.name;
+    const line = document.createElement('div');
+    line.className = 'turn-line';
+    line.textContent = 'Turn ' + ctx.turn + clock + ' · ' + windLabel(ctx.wind);
+    turnEl.append(name, line);
   }
 
   return { build, refresh };
