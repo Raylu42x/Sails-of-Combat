@@ -101,15 +101,17 @@ function inArc(s, ctx, mount, shot, enemies) {
     .sort((a, b) => dist(s, a) - dist(s, b));
 }
 
-// Which batteries would have to draw their charge to obey this order. Only
-// guns with something to shoot at draw — ordering grape while she is still a
-// mile off leaves your round shot where it is.
+// Which batteries would draw their charge this turn to obey the order: loaded
+// with the wrong kind, and with no mark to fire the held charge at. A battery
+// whose held charge still bears fires it out instead — the old load gets its
+// one last word, and the free reload afterwards takes the ordered charge.
 export function wouldDraw(s, ctx, shot) {
   if (shot === 'hold' || s.sails === 'full') return [];
   const enemies = targetsFor(s, ctx);
   return mountsOf(s)
     .filter(([id, m]) => isLoaded(s, id) && acceptsShot(m, shot) &&
-      s.guns[id].shot !== shot && inArc(s, ctx, m, shot, enemies).length)
+      s.guns[id].shot !== shot &&
+      !(acceptsShot(m, s.guns[id].shot) && inArc(s, ctx, m, s.guns[id].shot, enemies).length))
     .map(([id, m]) => ({ id, mount: m, tag: m.tag }));
 }
 
@@ -133,21 +135,27 @@ export function fireAll(s, ctx, shot, results) {
     // down to the water. They stay shut. This is what the weather gage costs
     // you: the windward ship cannot open the battery she is bearing.
     if (lee && id === lee && !mount.chaser) { heeled = mount.label || id; continue; }
-    if (!acceptsShot(mount, shot)) continue;      // swivels take grape and nothing else
-    const candidates = inArc(s, ctx, mount, shot, enemies);
     if (mount.arcs.some(a => enemies.some(t => relBearing(s, t, s.facing) === a))) bore = true;
-    if (s.guns[id].shot !== shot) {               // wrong charge in the barrel
-      // Only draw for a gun that has a mark to shoot at; otherwise she keeps
-      // what she is holding and you have lost nothing.
-      if (!candidates.length) continue;
+    // Guns fire what they hold when it bears, whatever the standing order —
+    // the fastest way to empty a gun has always been to fire it.
+    const held = s.guns[id].shot;
+    const heldMarks = acceptsShot(mount, held) ? inArc(s, ctx, mount, held, enemies) : [];
+    if (heldMarks.length) {
+      results.push(resolveShot(s, heldMarks[0], id, mount, held, ctx.wind));
+      if (held !== shot && acceptsShot(mount, shot)) {
+        // the free reload after firing takes the ordered charge
+        s.guns[id] = { reload: reloadTurns(s, mount, shot), shot };
+      }
+      fired++;
+      continue;
+    }
+    if (held !== shot && acceptsShot(mount, shot)) {
+      // No mark for what she holds, so the crews draw it now, while they are
+      // idle — the change lands during the approach, not at contact.
       s.guns[id].reload = drawTurns(s, mount, shot);
       s.guns[id].shot = shot;
       drew++;
-      continue;
     }
-    if (!candidates.length) continue;
-    results.push(resolveShot(s, candidates[0], id, mount, shot, ctx.wind));
-    fired++;
   }
   if (drew) results.push({ s, none: true, drew });
   if (heeled && !fired) results.push({ s, none: true, heeled });
