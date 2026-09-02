@@ -366,7 +366,10 @@ export function createGame(view) {
           ctx.tally.taken.crew += r.crew || 0;
         }
         await view.animateShot(r, applyFireResult, log);
-        if (r.t && checkStrike(r.t, ctx)) { log(r.t.name + ' strikes her colours!', 'big'); bus.emit('struck', r.t); }
+        // No strike check here: the broadsides are one simultaneous exchange,
+        // and her shots were in the air with yours. Checking mid-exchange
+        // showed a ship striking her colours and then firing. The endOfTurn
+        // sweep judges everyone once the smoke has cleared.
         bus.emit('change', ctx);
       }
     }
