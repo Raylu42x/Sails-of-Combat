@@ -1,6 +1,6 @@
 import { dist, relBearing } from './hex.js';
 import { chance, rnd } from './rng.js';
-import { anyLoaded, crewFrac, isLoaded, mountsOf, shortHanded, speedOf } from './ship.js';
+import { anyLoaded, crewFrac, isLoaded, madeFast, mountsOf, shortHanded, speedOf } from './ship.js';
 import { gunType } from '../data/ships.js';
 import { attOf } from './wind.js';
 
@@ -301,6 +301,19 @@ function swivelSupport(s) {
   }
   return bonus;
 }
+
+// The odds the hooks bite, as the rule actually computes them — a ship with way
+// on her sheers off, a crippled one cannot. The player can only learn 'cripple
+// her, then hook her' from play if the game will tell them this before they try.
+export function grappleOdds(s, target, ctx) {
+  const slow = target.inIrons || target.rigging / target.rigMax <= 0.4 ||
+    speedOf(target, attOf(target.facing, ctx.wind.from), target.sails, ctx.wind) <= 1 ||
+    madeFast(target);
+  return { p: slow ? 0.75 : 0.4, slow };
+}
+
+// Whether her swivels are loaded with grape and ready to sweep a gangway.
+export const swivelsReady = s => swivelSupport(s) > 0;
 
 export function boardingRound(fight, a, b, actA, actB, log) {
   const A = COMMITMENT[actA] || COMMITMENT.press;

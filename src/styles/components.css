@@ -215,3 +215,24 @@
   .level-name { font-size: 10.5px; letter-spacing: 0.1em; }
   .turn-line { font-size: 9px; }
 }
+
+/* Who holds the deck: seven ticks, a pointer, and a goal line at each end. */
+.momentum {
+  flex: 1; display: flex; align-items: center; gap: 3px;
+  border: 1px solid var(--chart); padding: 4px 6px; min-height: 34px;
+}
+.m-tick {
+  flex: 1; height: 8px; background: rgba(0,0,0,0.4);
+  border: 1px solid var(--chart-dim);
+}
+.m-tick.m-mid { background: rgba(0,0,0,0.55); }
+.m-tick.on-you { background: var(--brass); border-color: var(--brass); }
+.m-tick.on-foe { background: var(--signal); border-color: var(--signal); }
+.m-end {
+  font-size: 8.5px; font-weight: 700; letter-spacing: 0.1em;
+  color: var(--ink-dim); flex: none;
+}
+.m-end.yours { color: var(--brass); }
+.m-end.her { color: var(--signal); }
+.momentum.at-goal .m-end.yours, .momentum.at-goal .m-end.her { color: var(--flash); }
+.m-tick.on-even { background: var(--ink-dim); border-color: var(--ink-dim); }
