@@ -255,6 +255,33 @@ export function createRenderer(canvas, box, game, layers) {
     if (layerOn('track')) {
       cx.fillStyle = 'rgba(217,164,65,0.16)';
       for (const c of path) { hexPath(L.px(c.q, c.r)); cx.fill(); }
+      // The course as a drawn line with an arrowhead, so direction reads at a
+      // glance — and a short heading mark when she will not move at all.
+      const start = L.px(you.q, you.r);
+      cx.strokeStyle = C('--brass'); cx.lineWidth = 2; cx.globalAlpha = 0.85;
+      let tip, ang;
+      if (path.length) {
+        const pts = [start, ...path.map(c => L.px(c.q, c.r))];
+        cx.beginPath(); cx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) cx.lineTo(pts[i].x, pts[i].y);
+        cx.stroke();
+        tip = pts[pts.length - 1];
+        const back = pts[pts.length - 2];
+        ang = Math.atan2(tip.y - back.y, tip.x - back.x);
+      } else {
+        ang = angleOf(f);
+        tip = { x: start.x + Math.cos(ang) * L.S * 0.95, y: start.y + Math.sin(ang) * L.S * 0.95 };
+        cx.beginPath();
+        cx.moveTo(start.x + Math.cos(ang) * L.S * 0.45, start.y + Math.sin(ang) * L.S * 0.45);
+        cx.lineTo(tip.x, tip.y); cx.stroke();
+      }
+      for (const spread of [-0.5, 0.5]) {
+        cx.beginPath();
+        cx.moveTo(tip.x, tip.y);
+        cx.lineTo(tip.x - Math.cos(ang + spread) * L.S * 0.35, tip.y - Math.sin(ang + spread) * L.S * 0.35);
+        cx.stroke();
+      }
+      cx.globalAlpha = 1;
     }
     if (layerOn('arcs')) drawArcs(ctx, path.length ? path[path.length - 1] : you, f);
   }
@@ -318,27 +345,54 @@ export function createRenderer(canvas, box, game, layers) {
     // A line round the outside, so the edge of your reach is a place on the
     // chart rather than something to be inferred from a wash of tint. Only the
     // edges with no neighbour inside the reach get drawn.
-    const outline = (cells, dashed) => {
-      cx.strokeStyle = C('--brass');
-      cx.lineWidth = dashed ? 1.2 : 1.6;
-      cx.globalAlpha = dashed ? 0.45 : 0.85;
-      cx.setLineDash(dashed ? [4, 4] : []);
-      for (const k of cells) {
-        const [q, r] = k.split(',').map(Number);
-        const p = L.px(q, r);
-        for (let dir = 0; dir < 6; dir++) {
-          const n = DIRS[dir];
-          if (cells.has((q + n.q) + ',' + (r + n.r))) continue;
-          strokeEdge(p, EDGE_OF_DIR[dir]);
-        }
-      }
-      cx.setLineDash([]);
-      cx.globalAlpha = 1;
-    };
-    outline(reach, false);
+    outlineCells(reach, C('--brass'), false);
     // Dashed: the guns hold a different charge, so this is the reach you will
     // have once they have drawn it — not this turn.
-    outline(pending, true);
+    outlineCells(pending, C('--brass'), true);
+  }
+
+  // A line round the outside of a set of hexes — only edges with no neighbour
+  // inside the set get drawn. Shared by your reach and the enemy's.
+  function outlineCells(cells, color, dashed) {
+    cx.strokeStyle = color;
+    cx.lineWidth = dashed ? 1.2 : 1.6;
+    cx.globalAlpha = dashed ? 0.45 : 0.85;
+    cx.setLineDash(dashed ? [4, 4] : []);
+    for (const k of cells) {
+      const [q, r] = k.split(',').map(Number);
+      const p = L.px(q, r);
+      for (let dir = 0; dir < 6; dir++) {
+        const n = DIRS[dir];
+        if (cells.has((q + n.q) + ',' + (r + n.r))) continue;
+        strokeEdge(p, EDGE_OF_DIR[dir]);
+      }
+    }
+    cx.setLineDash([]);
+    cx.globalAlpha = 1;
+  }
+
+  // How far her guns reach, drawn from what a spyglass honestly shows: her
+  // mounts and their pieces, from where she lies now. Never her charges or
+  // whether she is loaded — dashed, because her readiness is exactly what
+  // you do not know.
+  function drawThreat(ctx) {
+    const cells = new Set();
+    for (const s of ctx.ships) {
+      if (s.side === ctx.you.side || s.struck || !game.visibleTo(ctx.you, s)) continue;
+      for (const [id, mount] of mountsOf(s)) {
+        const shot = acceptsShot(mount, 'round') ? 'round' : 'grape';
+        const range = rangeOf(mount, shot);
+        for (const c of ctx.board.cells()) {
+          const d = dist(s, c);
+          if (d < 1 || d > range) continue;
+          if (!mount.arcs.includes(relBearing(s, c, s.facing))) continue;
+          if (ctx.board.landAt(c.q, c.r)) continue;
+          if (ctx.board.sightBlocked(s, c)) continue;
+          cells.add(c.q + ',' + c.r);
+        }
+      }
+    }
+    if (cells.size) outlineCells(cells, C('--signal'), true);
   }
 
   function drawRangeLine(ctx, target) {
@@ -394,6 +448,7 @@ export function createRenderer(canvas, box, game, layers) {
     drawTerrain(ctx);
 
     const idle = !ctx.over && !ctx.busy && !ctx.you.grappledTo && !ctx.you.struck;
+    if (idle && layerOn('threat')) drawThreat(ctx);
     if (idle) drawGhostTrack(ctx);
 
     const hostiles = ctx.ships.filter(s => s.side !== ctx.you.side && !s.struck);
