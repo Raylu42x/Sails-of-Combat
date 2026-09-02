@@ -5,6 +5,22 @@ import { chance } from './rng.js';
 // Adding a level type means adding a case here.
 const alive = (ships, pred) => ships.filter(s => !s.struck && pred(s));
 
+// The strike is not the end of the business — securing her is. While a beaten
+// ship still floats within reach and you have hands enough to man her, the
+// action stays open so you can lay alongside and take possession. The player
+// ends it with the End action button when they are done, or by sailing away.
+const PRIZE_REACH = 4;
+// You get a few turns to lay alongside her, not the rest of the night. After
+// that she has drifted off in the dark, and the chance is gone.
+const PRIZE_WINDOW = 3;
+export function prizeInReach(ctx) {
+  const you = ctx.you;
+  if (!you || you.struck || ctx.ended) return null;
+  if ((ctx.afterTurns || 0) > PRIZE_WINDOW) return null;
+  return ctx.ships.find(o => o.struck && !o.destroyed && !o.taken &&
+    o.side !== you.side && dist(you, o) <= PRIZE_REACH) || null;
+}
+
 export function evaluate(ctx) {
   const { ships, scenario, turn } = ctx;
   const obj = scenario.objective || { type: 'duel' };
@@ -23,8 +39,13 @@ export function evaluate(ctx) {
   switch (obj.type) {
     case 'chase': {
       if (!quarry || quarry.struck) {
-        return { done: true, won: true, title: 'Prize Taken',
-          text: 'The ' + (quarry ? quarry.name : 'quarry') + ' strikes. The despatches are yours.' };
+        if (prizeInReach(ctx)) return null;   // she has struck; go and take her
+        const taken = quarry && quarry.taken;
+        return { done: true, won: taken, title: taken ? 'Prize Taken' : 'She Struck, and Drifted',
+          text: taken
+            ? 'The ' + quarry.name + ' is yours, and the despatches with her.'
+            : 'The ' + (quarry ? quarry.name : 'quarry') + ' struck — but you never put a man aboard her, ' +
+              'and the despatches are still in her cabin as she drifts away in the dark.' };
       }
       if (dist(you, quarry) >= (obj.escapeDist || 8)) {
         return { done: true, won: false, title: 'Lost Her',
@@ -42,6 +63,7 @@ export function evaluate(ctx) {
           text: 'The ' + (ward ? ward.name : 'convoy') + ' is taken. You may as well not come home.' };
       }
       if (!hostiles.length) {
+        if (prizeInReach(ctx)) return null;
         return { done: true, won: true, title: 'Convoy Safe',
           text: 'The privateer is beaten off. The ' + ward.name + ' swims, and so do you.' };
       }
@@ -87,8 +109,9 @@ export function evaluate(ctx) {
     }
     default: { // duel
       if (!hostiles.length) {
-        return { done: true, won: true, title: 'Prize Taken',
-          text: 'She strikes her colours. The prize court will pay well for this morning’s work.' };
+        if (prizeInReach(ctx)) return null;   // there is a prize to secure yet
+        return { done: true, won: true, title: 'Action Won',
+          text: 'She strikes her colours, and the sea is yours.' };
       }
       const far = hostiles.every(h => dist(you, h) >= (obj.breakOffDist || 9));
       if (far) {

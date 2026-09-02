@@ -4,6 +4,10 @@ import { isLoaded, madeFast, mountsOf, shortHanded, simFacing, speedOf } from '.
 import { acceptsShot, drawTurns, leeSide, momentumText, wouldDraw } from '../core/combat.js';
 
 const SHOT_TAG = { round: 'rnd', chain: 'chn', grape: 'grp', double: 'dbl' };
+// A glyph per charge: a ball, two balls linked by a bar, a scatter of small
+// shot, and two balls on one charge. They survive a narrow screen where three
+// letters do not.
+export const SHOT_ICON = { round: '●', chain: '∞', grape: '∴', double: '⦿' };
 
 // Wires the order segments, keeps them honest about what this ship can do,
 // and writes the one-line forecast under the chart.
@@ -59,7 +63,10 @@ export function createOrders(root, hintEl, game, onChange) {
     // Ground tackle. On open-ocean charts there is no bottom anywhere, so the
     // row is hidden entirely rather than sitting there greyed out.
     const soundings = (ctx.map.water || []).length > 0;
-    document.getElementById('cableRow').classList.toggle('reserved', !soundings);
+    // On a chart with no bottom anywhere the row is gone entirely rather than
+    // sitting there as an empty gap. The controls below it do not move when it
+    // goes, because the log above takes up the slack.
+    document.getElementById('cableRow').hidden = !soundings;
     const overGround = ctx.board.anchorable(you.q, you.r);
     const canAnchor = you.anchor === 'up' && !you.grounded && overGround;
     const canWeigh = you.anchor === 'down' && !you.grounded;
@@ -144,11 +151,24 @@ export function createOrders(root, hintEl, game, onChange) {
     // the turns remaining when it is not.
     // In a gale the lee ports are under water; that battery is marked, not counted.
     const lee = leeSide(you, ctx.wind);
+    // What every battery is actually holding, and what it is about to do about
+    // the order you have given. The shot row is a standing preference, not an
+    // immediate command: a battery only draws a charge when it has a mark to
+    // fire at, so one can load chain this turn while another waits, holding its
+    // round shot until something comes into its arc. That stagger reads as a
+    // fault unless the state is on screen.
+    const drawing = new Set(wouldDraw(you, ctx, orders.shot).map(d => d.id));
     const batteries = mountsOf(you)
-      .map(([id, m]) => m.tag + ' ' +
-        (lee && id === lee && !m.chaser ? '~awash'
-          : isLoaded(you, id) ? '✓' + (SHOT_TAG[you.guns[id].shot] || you.guns[id].shot)
-          : you.guns[id].reload))
+      .map(([id, m]) => {
+        const held = you.guns[id].shot;
+        const icon = SHOT_ICON[held] || held;
+        if (lee && id === lee && !m.chaser) return m.tag + ' ~awash';
+        if (!isLoaded(you, id)) return m.tag + ' ' + icon + ' ' + you.guns[id].reload;
+        if (orders.shot === 'hold' || held === orders.shot) return m.tag + ' ' + icon + '✓';
+        if (!acceptsShot(m, orders.shot)) return m.tag + ' ' + icon + '✓';
+        if (drawing.has(id)) return m.tag + ' ' + icon + '→' + (SHOT_ICON[orders.shot] || '');
+        return m.tag + ' ' + icon + ' waits';
+      })
       .join(' · ');
     // Ordering a charge the guns are not holding costs a turn to draw — but
     // only for a battery that has something in reach to fire it at.

@@ -16,7 +16,14 @@ h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.14em; text-
   min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-.ships { display: flex; gap: 6px; flex: none; flex-wrap: wrap; }
+/* A grid, not a wrapping row: with three ships the odd one out used to stretch
+   the full width, and a wider card reads as a longer bar — as if she had more
+   hull than anyone. Every card is now the same width whatever the count. */
+.ships {
+  display: grid; gap: 6px; flex: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.ships.many { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 #boardBox { flex: 1 1 auto; min-height: 0; position: relative; }
 #sea { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border: 1px solid var(--chart); background: var(--sea); }
 .panel-col { display: contents; }
@@ -38,8 +45,7 @@ h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.14em; text-
     display: flex; flex-direction: column; gap: 8px;
     min-height: 0; overflow-y: auto;
   }
-  .ships { flex-wrap: wrap; }
-  .card { min-width: 130px; }
+  .card { min-width: 0; }
   /* The log takes the slack, so the order rows and the buttons stay put no
      matter how many ships a level has or how long the forecast line runs.
      Specific enough to beat the base rule in components.css, which is loaded
@@ -51,6 +57,29 @@ h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.14em; text-
 @media (min-width: 1100px) {
   .wrap { grid-template-columns: minmax(0, 1.5fr) 380px; }
   .seg button { font-size: 14px; padding: 10px 0; }
+}
+
+/* Small screens: the chart is the game. Everything else gets compact so the
+   board can have the space — the ship cards lose their bar labels and shrink to
+   a single line each, and the header collapses to one tight row. */
+@media (max-width: 480px) {
+  .wrap { padding: 4px 6px 6px; gap: 4px; }
+  h1 { font-size: 15px; letter-spacing: 0.1em; }
+  .sub { font-size: 9.5px; }
+  .ships { gap: 4px; }
+  .card { padding: 2px 5px 3px; }
+  .card .name { font-size: 10px; }
+  .bar { gap: 3px; margin-top: 1px; }
+  /* Hull / Rig / Crew shorten to H / R / C rather than vanishing — three
+     unlabelled bars tell you nothing about which one is bleeding. */
+  .bar .lb { width: 9px; }
+  .bar .track { height: 3px; }
+  .hint { font-size: 10px; min-height: 2.4em; }
+  .orow .lbl { width: 30px; font-size: 9px; }
+  .seg { gap: 2px; }
+  .seg button { font-size: 11px; padding: 6px 0; min-height: 30px; }
+  #exec { font-size: 14px; padding: 9px 0; }
+  .log { height: 46px; font-size: 10px; padding: 3px 6px; }
 }
 
 /* Short landscape phones: trim the chrome so the chart still fits. */

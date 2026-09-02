@@ -7,7 +7,7 @@ import { attOf, maybeShift, windLabel } from './wind.js';
 import { moveShips } from './movement.js';
 import { applyFireResult, boardingRound, fireAll, startBoarding, tryGrapple } from './combat.js';
 import { aiOrders, aiWantsGrapple } from './ai.js';
-import { checkStrike, evaluate } from './objectives.js';
+import { checkStrike, evaluate, prizeInReach } from './objectives.js';
 import { mapById } from '../data/maps.js';
 import { scenarioById } from '../data/scenarios.js';
 
@@ -28,7 +28,7 @@ export function createGame(view) {
     const ships = scenario.ships.map(createShip);
     ctx = {
       scenario, map, wind, ships, board: createBoard(map),
-      turn: 1, over: false, busy: false, log, prizes: [],
+      turn: 1, over: false, busy: false, log, prizes: [], afterTurns: 0,
       you: ships.find(s => s.isYou),
     };
     Object.assign(orders, { helm: 0, sails: 'battle', shot: 'round', grapple: 'no', melee: 'press', cable: 'stand' });
@@ -84,11 +84,15 @@ export function createGame(view) {
     }
   }
 
-  // How far the helm will answer: hard over under way, one point on a spring
-  // at anchor, and not at all with her keel in the sand.
+  // How far the helm will answer: hard over under way, and not at all with her
+  // keel in the sand. A spring — a line from the cable to the quarter, hove on
+  // by the capstan — swings a ship at anchor a long way round; that was the
+  // whole point of rigging one, and it is how an anchored ship kept her
+  // broadside on a moving enemy. Two points, same as a ship under way, but she
+  // is warping herself round rather than steering.
   function helmLimit(s) {
     if (s.grounded) return 0;
-    if (s.anchor !== 'up') return 1;
+    if (s.anchor !== 'up') return Math.min(2, s.turnMax);
     return s.turnMax;
   }
 
@@ -173,6 +177,12 @@ export function createGame(view) {
         }
       }
       if (s.rudderJam > 0) s.rudderJam -= 1;
+      // How many turns she has spent in the same patch of sea under her own
+      // orders. Riding at anchor or hard aground does not count as sulking.
+      if (madeFast(s)) s.idleTurns = 0;
+      else if (s.lastCell === s.q + ',' + s.r) s.idleTurns = (s.idleTurns || 0) + 1;
+      else s.idleTurns = 0;
+      s.lastCell = s.q + ',' + s.r;
       burn(s);
       if (s.anchor === 'weighing') {
         s.anchor = 'up';
@@ -199,6 +209,9 @@ export function createGame(view) {
       log('The wind ' + (shift === 1 ? 'veers' : 'backs') + ' — now from ' + ['N','NE','SE','S','SW','NW'][ctx.wind.from] + '.', 'big');
       for (const s of ctx.ships) s.inIrons = attOf(s.facing, ctx.wind.from) === 0;
     }
+    // Once nothing is left to fight, the clock on securing a prize starts.
+    const stillFighting = ctx.ships.some(o => !o.struck && o.side !== ctx.you.side);
+    ctx.afterTurns = stillFighting ? 0 : (ctx.afterTurns || 0) + 1;
     ctx.turn += 1;
     log('— Turn ' + ctx.turn + ' —', 'turnhead');
     bus.emit('turn', ctx.turn);
@@ -319,5 +332,19 @@ export function createGame(view) {
     if (verdict) finish(verdict);
   }
 
-  return { on: bus.on.bind(bus), emit: bus.emit.bind(bus), start, state, setOrder, getOrders, execute, visibleTo, log };
+  // The fighting is done but the business may not be: a beaten ship alongside is
+  // worth nothing until she is manned. The player says when to break off.
+  const fightOver = () => ctx && !ctx.over &&
+    !ctx.ships.some(o => !o.struck && o.side !== ctx.you.side) && !ctx.you.struck;
+  const prizeWaiting = () => (ctx && !ctx.over ? prizeInReach(ctx) : null);
+  function endAction() {
+    if (!ctx || ctx.over) return;
+    ctx.ended = true;
+    const v = evaluate(ctx) || { done: true, won: true, title: 'Action Ended',
+      text: 'You haul off and leave her to the sea.' };
+    bus.emit('change', ctx);
+    finish(v);
+  }
+
+  return { fightOver, prizeWaiting, endAction, on: bus.on.bind(bus), emit: bus.emit.bind(bus), start, state, setOrder, getOrders, execute, visibleTo, log };
 }

@@ -232,6 +232,17 @@ export function createRenderer(canvas, box, game, layers) {
       }
       cx.globalAlpha = 1;
     }
+    // Riding at anchor is a state you can see, not a line you had to catch.
+    if (s.anchor !== 'up' && !s.struck) {
+      cx.strokeStyle = C('--ink'); cx.lineWidth = 1.4;
+      const ax = p.x - L.S * 0.62, ay = p.y + L.S * 0.5;
+      cx.beginPath();
+      cx.moveTo(ax, ay - L.S * 0.2); cx.lineTo(ax, ay + L.S * 0.16);
+      cx.moveTo(ax - L.S * 0.12, ay - L.S * 0.1); cx.lineTo(ax + L.S * 0.12, ay - L.S * 0.1);
+      cx.moveTo(ax - L.S * 0.14, ay + L.S * 0.04);
+      cx.quadraticCurveTo(ax, ay + L.S * 0.24, ax + L.S * 0.14, ay + L.S * 0.04);
+      cx.stroke();
+    }
     const tag = s.destroyed ? 'BLOWN UP'
       : s.taken ? 'PRIZE'
       : s.struck ? 'STRUCK'

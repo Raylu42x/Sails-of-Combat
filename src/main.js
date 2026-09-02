@@ -61,6 +61,16 @@ function startScenario(id) {
 }
 
 execBtn.addEventListener('pointerdown', () => { sfx.wake(); game.execute(); });
+
+// Offered only once nothing is left to fight and a beaten ship is still within
+// reach: lay alongside and man her, or break off and leave her where she lies.
+const endBtn = document.getElementById('endAction');
+endBtn.addEventListener('pointerdown', () => { sfx.click(); game.endAction(); });
+game.on('change', () => {
+  const prize = game.fightOver() ? game.prizeWaiting() : null;
+  endBtn.hidden = !prize;
+  if (prize) endBtn.title = 'Break off and leave ' + prize.name + ' where she lies';
+});
 // LEVELS opens the picker over the action: abandon it, restart it, or go back.
 document.getElementById('restart').addEventListener('pointerdown', () => {
   const ctx = game.state();
