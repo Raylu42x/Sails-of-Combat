@@ -17,7 +17,7 @@ export function prizeInReach(ctx) {
   const you = ctx.you;
   if (!you || you.struck || ctx.ended) return null;
   if ((ctx.afterTurns || 0) > PRIZE_WINDOW) return null;
-  return ctx.ships.find(o => o.struck && !o.destroyed && !o.taken &&
+  return ctx.ships.find(o => o.struck && !o.destroyed && !o.taken && !o.offBoard &&
     o.side !== you.side && dist(you, o) <= PRIZE_REACH) || null;
 }
 

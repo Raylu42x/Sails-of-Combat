@@ -13,7 +13,7 @@ export function pathOf(s, ctx, opts = {}) {
   const inIrons = opts.inIrons !== undefined ? opts.inIrons : s.inIrons;
   const att = attOf(facing, wind.from);
   const v = inIrons || att === 0 ? 0 : speedOf(s, att, sails, wind);
-  const blockers = ships.filter(o => o !== s); // a struck ship is still a hull in the way
+  const blockers = ships.filter(o => o !== s && !o.offBoard); // a struck ship is still a hull in the way — until she falls astern
   const cells = [];
   let cur = { q: s.q, r: s.r };
   for (let i = 0; i < v; i++) {
