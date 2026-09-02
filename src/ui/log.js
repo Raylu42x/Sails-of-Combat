@@ -32,6 +32,7 @@ export function createLog(el) {
   });
 
   return {
+    history() { return lines.slice(); },
     clear() { lines.length = 0; el.innerHTML = ''; },
     write(msg, cls) {
       lines.push({ msg, cls });
