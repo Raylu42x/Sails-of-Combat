@@ -6,6 +6,7 @@ export const LAYERS = [
   { id: 'depth', name: 'Soundings', hint: 'Shoals and holding ground' },
   { id: 'arcs',  name: 'Gun arcs',  hint: 'Where your loaded guns will bear' },
   { id: 'track', name: 'Track',     hint: 'The hexes this turn’s orders will sail' },
+  { id: 'threat', name: 'Her guns',  hint: 'How far the enemy’s guns can reach' },
   { id: 'range', name: 'Range line', hint: 'Bearing and distance to the enemy' },
 ];
 
