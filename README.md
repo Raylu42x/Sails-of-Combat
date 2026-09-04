@@ -4,7 +4,7 @@ A turn-based age-of-sail gunnery game that runs in the browser with no build
 step, no dependencies and no server logic. You give orders — helm, sails, guns
 — both sides commit blind, and then the turn plays out.
 
-## Try it at: https://sailsofcombat.kervian.com/**
+## Try it at: https://sailsofcombat.kervian.com/
 
 ## Playing
 
