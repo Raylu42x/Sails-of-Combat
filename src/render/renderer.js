@@ -41,7 +41,10 @@ export function createRenderer(canvas, box, game, layers) {
   // --- the view adapter the game calls for anything that takes time --------
   const view = {
     pause: sleepDraw,
-    async animateMoves(from, paths, shift) {
+    // The pass, hex by hex, with the guns speaking as they bear. Ships advance
+    // one hex at a time; at each step, any shot timed for that moment is fired
+    // with both ships drawn where they actually were.
+    async animateMoves(from, paths, shift, events = [], apply = null, log = null) {
       const ctx = game.state();
       if (shift) fx.pan = { x: -shift.x * L.S, y: -shift.y * L.S };
       const tracks = ctx.ships.map(s => {
@@ -55,18 +58,51 @@ export function createRenderer(canvas, box, game, layers) {
         return { x: wp[i].x + (wp[i + 1].x - wp[i].x) * f, y: wp[i].y + (wp[i + 1].y - wp[i].y) * f };
       };
       const panFrom = { x: fx.pan.x, y: fx.pan.y };
-      await tween(shift ? 640 : 520, k => {
-        const e = 1 - (1 - k) * (1 - k);
-        fx.pan = { x: panFrom.x * (1 - e), y: panFrom.y * (1 - e) };
-        for (const t of tracks) fx.shipPos[t.s.uid] = lerp(t.wp, k);
-      });
+      const span = Math.max(1, ...tracks.map(t => t.wp.length - 1));
+      const total = shift ? 640 : 520;
+      const stepMs = Math.max(150, total / span);
+
+      // Anything timed for the moment before anyone moves.
+      const firedAt = k => events.filter(e => e.step === k && !e.none);
+      const runShots = async list => {
+        for (const r of list) {
+          // Hold the ships where they were as she bore, and fire from there.
+          for (const t of tracks) fx.shipPos[t.s.uid] = lerp(t.wp, holdAt / span);
+          await view.animateShot(r, apply, log);
+        }
+      };
+      let holdAt = 0;
+      if (apply) await runShots(firedAt(0));
+
+      for (let step = 1; step <= span; step++) {
+        const from0 = (step - 1) / span, to0 = step / span;
+        await tween(stepMs, k => {
+          const e = 1 - (1 - k) * (1 - k);
+          const at = from0 + (to0 - from0) * k;
+          fx.pan = { x: panFrom.x * (1 - e) * (1 - from0), y: panFrom.y * (1 - e) * (1 - from0) };
+          for (const t of tracks) fx.shipPos[t.s.uid] = lerp(t.wp, at);
+        });
+        holdAt = step;
+        if (apply) await runShots(firedAt(step));
+      }
+
+      // Shots with no timing of their own — a green crew's, and the messages
+      // about guns that did not fire — land once the pass is over.
+      if (apply) {
+        for (const r of events.filter(e => e.step === null || e.none)) {
+          await view.animateShot(r, apply, log);
+        }
+      }
       fx.shipPos = {}; fx.pan = { x: 0, y: 0 };
     },
     async animateShot(r, apply, log) {
       if (r.none) { apply(r, log); return; }
-      const A = L.px(r.s.q, r.s.r), B = L.px(r.t.q, r.t.r);
+      // Fired from where she was at that moment of the pass, not from wherever
+      // the turn happens to leave her.
+      const at = r.from || r.s, tgt = r.at || r.t;
+      const A = L.px(at.q, at.r), B = L.px(tgt.q, tgt.r);
       fx.muzzle = { x: A.x, y: A.y, tx: B.x, ty: B.y, t0: now(), life: 200 };
-      sfx.gun(r.chaser ? 0.6 : 1, dist(r.s, r.t));
+      sfx.gun(r.chaser ? 0.6 : 1, dist(at, tgt));
       await sleepDraw(120);
       await tween(r.chaser ? 180 : 240, k => { fx.tracer = { x1: A.x, y1: A.y, x2: B.x, y2: B.y, k }; });
       fx.tracer = null; fx.muzzle = null;
