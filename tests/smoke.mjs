@@ -2,7 +2,7 @@
 // sure the rules never throw and every fight reaches a verdict.
 //   node tests/smoke.mjs
 import { createGame } from '../src/core/game.js';
-import { SCENARIOS } from '../src/data/scenarios.js';
+import { SCENARIOS } from '../levels/index.js';
 
 const noopView = {
   pause: async () => {},

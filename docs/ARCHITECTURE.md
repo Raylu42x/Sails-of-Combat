@@ -51,6 +51,14 @@ Events the core emits, all consumed in `src/main.js`:
 third ship to a scenario needs no engine change; the HUD builds its cards from
 this list.
 
+## Levels
+
+One file per level in `levels/`, plus `levels/index.js` listing them in play
+order. A level is data — a map, a ship list, an objective and a briefing — and
+adding one needs no engine change. They are kept as small modules rather than
+JSON so they load unchanged in the browser and in Node, which is what lets the
+test harnesses import them directly with no loader and no build step.
+
 ## Coordinates
 
 Flat-top hexes in axial `(q, r)`, drawn as odd-q offset. `core/hex.js` owns all

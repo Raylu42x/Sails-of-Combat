@@ -3,7 +3,7 @@
 // unwinnable; this is the cheap way to notice.
 //   node tests/balance.mjs [runs-per-scenario]
 import { createGame } from '../src/core/game.js';
-import { SCENARIOS } from '../src/data/scenarios.js';
+import { SCENARIOS } from '../levels/index.js';
 import { aiOrders } from '../src/core/ai.js';
 import { dist, dirBetween } from '../src/core/hex.js';
 

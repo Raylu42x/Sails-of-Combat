@@ -11,12 +11,12 @@ what it touches so the cost is visible before anyone starts.
 
 1. **More levels.** The engine already supports duel, chase, protect and
    survive. Four scenarios is a demo; twelve is a game. *Touches:
-   `data/scenarios.js` only.*
+   `levels/` only.*
 2. ~~**Level select that remembers progress.**~~ Done: levels you have taken
    are marked in the picker and remembered in `localStorage`
    (`src/ui/progress.js`). Unlocking in order is still open, if we want it.
 3. **Difficulty per level.** Enemy `quality` and crew are already ship-class
-   fields; let a scenario override them. *Touches: `data/scenarios.js`,
+   fields; let a scenario override them. *Touches: `levels/`,
    `core/ship.js` (accept overrides in `createShip`).*
 4. **Keyboard orders.** Arrow keys for helm, number keys for shot, space for
    Make it so. Free accessibility win. *Touches: `ui/orders.js`.*
@@ -54,7 +54,7 @@ what it touches so the cost is visible before anyone starts.
 12. **Campaign.** Carry one ship between scenarios: damage persists, prize money
     buys refits and better crew, losses are permanent. Needs a save format and
     a between-action screen. *Touches: new `core/campaign.js`, new UI screen,
-    `data/scenarios.js` for the chain.*
+    `levels/` for the chain.*
 13. **Squadron command.** Give the player two or three ships and an order set
     per ship, with signals limiting what can be commanded at range. The ship
     list is already a flat array, so the rules side is mostly there; the UI is
