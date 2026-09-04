@@ -14,7 +14,7 @@ python3 -m http.server 8000
 Then open <http://localhost:8000>. Any static host works — GitHub Pages serves
 this repo as-is.
 
- - OR TRY IT AT: https://sailsofcombat.kervian.com/
+**OR TRY IT AT: https://sailsofcombat.kervian.com/**
 
 ## Playing
 
