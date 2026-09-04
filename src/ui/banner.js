@@ -1,4 +1,4 @@
-import { SCENARIOS } from '../data/scenarios.js';
+import { SCENARIOS } from '../../levels/index.js';
 import { sfx } from '../audio/sfx.js';
 import { progress } from './progress.js';
 

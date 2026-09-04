@@ -9,7 +9,7 @@ import { applyFireResult, boardingRound, fireAll, startBoarding, tryGrapple } fr
 import { aiOrders, aiWantsGrapple } from './ai.js';
 import { checkStrike, evaluate, prizeInReach } from './objectives.js';
 import { mapById } from '../data/maps.js';
-import { scenarioById } from '../data/scenarios.js';
+import { scenarioById } from '../../levels/index.js';
 
 // The game owns the rules and the clock. It never touches the DOM: it emits
 // events for the UI and calls a `view` adapter for anything that takes time.

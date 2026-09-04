@@ -97,7 +97,6 @@ src/core/             the rules — no DOM anywhere in here
 src/data/             content, as plain data
   ships.js            ship classes and their gun mounts
   maps.js             charts, wind, islands
-  scenarios.js        levels
 src/render/           canvas layout and drawing
 src/ui/               log, ship cards, order buttons, briefing overlay
 src/styles/           tokens, layout, components
@@ -127,7 +126,7 @@ strength, a list of island hexes with `height: 'low'` (blocks passage) or
 the chart slides to keep the fight centred, or `false` for fixed waters where
 the land has to stay put.
 
-**A new level** — add an entry to `src/data/scenarios.js`: a map, a list of
+**A new level** — add a file to `levels/` and a line to `levels/index.js`: a map, a list of
 ships with sides and roles, an objective, and the briefing text. Any ship may
 carry a `stats` override for hull, rigging, crew or quality, which is how a
 level is made harder or easier without inventing a ship class. Objectives
