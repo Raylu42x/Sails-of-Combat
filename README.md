@@ -4,17 +4,7 @@ A turn-based age-of-sail gunnery game that runs in the browser with no build
 step, no dependencies and no server logic. You give orders — helm, sails, guns
 — both sides commit blind, and then the turn plays out.
 
-## Running it
-
-ES modules will not load from `file://`, so serve the folder:
-
-```bash
-python3 -m http.server 8000
-```
-Then open <http://localhost:8000>. Any static host works — GitHub Pages serves
-this repo as-is.
-
-**OR TRY IT AT: https://sailsofcombat.kervian.com/**
+## Try it at: https://sailsofcombat.kervian.com/**
 
 ## Playing
 
