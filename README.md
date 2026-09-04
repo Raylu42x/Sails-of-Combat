@@ -11,9 +11,10 @@ ES modules will not load from `file://`, so serve the folder:
 ```bash
 python3 -m http.server 8000
 ```
- - OR TRY IT AT: https://sailsofcombat.kervian.com/
 Then open <http://localhost:8000>. Any static host works — GitHub Pages serves
 this repo as-is.
+
+ - OR TRY IT AT: https://sailsofcombat.kervian.com/
 
 ## Playing
 
