@@ -347,7 +347,16 @@ export function createGame(view) {
         applyHelm(s, Math.max(-l, Math.min(l, aiPlan.get(s.uid).helm)), ctx.wind, log);
       }
       const paths = moveShips(ctx, log);
-      await view.animateMoves(from, paths, shift);
+      // Where every ship was at each hex of the pass, so gunnery can happen
+      // during the manoeuvre rather than only after it. Index 0 is where she
+      // started; a ship that stops early simply stays at her last hex.
+      const span = 1 + Math.max(0, ...ctx.ships.map(sh => (paths[sh.uid] || []).length));
+      const tracks = new Map(ctx.ships.map(sh => {
+        const start = from.get(sh.uid) || { q: sh.q, r: sh.r };
+        const walked = [start, ...(paths[sh.uid] || [])];
+        while (walked.length < span) walked.push(walked[walked.length - 1]);
+        return [sh.uid, walked];
+      }));
 
       let hooked = orders.grapple === 'yes' ? tryGrapple(you, ctx, true, log) : null;
       for (const s of acting) if (aiWantsGrapple(s, ctx)) hooked = tryGrapple(s, ctx, false, log) || hooked;
@@ -358,8 +367,16 @@ export function createGame(view) {
       }
 
       const results = [];
-      fireAll(you, ctx, orders.shot, results);
-      for (const s of acting) fireAll(s, ctx, aiPlan.get(s.uid).shot, results);
+      fireAll(you, ctx, orders.shot, results, tracks);
+      for (const s of acting) fireAll(s, ctx, aiPlan.get(s.uid).shot, results, tracks);
+      // Chronological: a shot taken as she bore at the second hex happens
+      // before one taken at the fourth, whoever fired it.
+      results.sort((a, b) => (a.step === null ? 99 : a.step) - (b.step === null ? 99 : b.step));
+      // The manoeuvre and the gunnery are one event now: the ships sail their
+      // tracks and the guns speak as they bear.
+      await view.animateMoves(from, paths, shift, results, applyFireResult, log);
+      // Whatever the view did or did not animate, every shot lands here.
+      for (const r of results) applyFireResult(r, log);
       for (const r of results) {
         if (r.s === you && !r.none) {
           ctx.tally.fired += 1;
@@ -375,7 +392,7 @@ export function createGame(view) {
           ctx.tally.taken.rig += r.rig || 0;
           ctx.tally.taken.crew += r.crew || 0;
         }
-        await view.animateShot(r, applyFireResult, log);
+        // The shot itself was animated and applied during the pass, above.
         // No strike check here: the broadsides are one simultaneous exchange,
         // and her shots were in the air with yours. Checking mid-exchange
         // showed a ship striking her colours and then firing. The endOfTurn

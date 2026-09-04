@@ -88,17 +88,69 @@ function targetsFor(s, ctx) {
   return ctx.ships.filter(o => !o.struck && o.side !== s.side);
 }
 
+// Where a ship is partway through her track. Ships that have already stopped
+// simply stay put, and a ship with no track at all (grappled, or a caller that
+// does not care about timing) is wherever she is now.
+export function posAt(tracks, ship, k) {
+  const t = tracks && tracks.get(ship.uid);
+  if (!t || !t.length) return { q: ship.q, r: ship.r };
+  return t[Math.min(k, t.length - 1)];
+}
+
+export const trackLength = tracks =>
+  tracks ? Math.max(1, ...[...tracks.values()].map(t => t.length)) : 1;
+
+// How well she times a broadside during a pass, bought with crew quality:
+//
+//   green  fire from wherever the turn ends — a slow gun captain misses the pass
+//   able   fire the moment she bears
+//   crack  wait for the best moment of the whole pass: a rake, or point blank
+//
+// No new orders: the player is a tactician, not a gun captain.
+export const fireTier = s =>
+  s.quality >= 1.15 ? 'crack' : s.quality >= 1.05 ? 'able' : 'green';
+
+export const TIER_NAME = { green: 'green crew', able: 'able crew', crack: 'crack crew' };
+
 // Enemies this mount could actually engage with this shot, nearest first.
-function inArc(s, ctx, mount, shot, enemies) {
+function inArc(s, ctx, mount, shot, enemies, tracks, k) {
   const range = rangeOf(mount, shot);
+  const from = tracks ? posAt(tracks, s, k) : s;
   return enemies
-    .filter(t => {
-      const d = dist(s, t);
+    .map(t => ({ t, at: tracks ? posAt(tracks, t, k) : t }))
+    .filter(({ at }) => {
+      const d = dist(from, at);
       return d > 0 && d <= range &&
-        mount.arcs.includes(relBearing(s, t, s.facing)) &&
-        !ctx.board.shotBlocked(s, t);
+        mount.arcs.includes(relBearing(from, at, s.facing)) &&
+        !ctx.board.shotBlocked(from, at);
     })
-    .sort((a, b) => dist(s, a) - dist(s, b));
+    .sort((a, b) => dist(from, a.at) - dist(from, b.at))
+    .map(({ t }) => t);
+}
+
+// The moment in the pass this mount takes its shot, by the crew's tier.
+// Returns { k, target } or null.
+function chooseMoment(s, ctx, mount, shot, enemies, tracks) {
+  const last = trackLength(tracks) - 1;
+  const tier = tracks ? fireTier(s) : 'green';
+  if (tier === 'green') {
+    const marks = inArc(s, ctx, mount, shot, enemies, tracks, last);
+    return marks.length ? { k: last, target: marks[0] } : null;
+  }
+  let best = null;
+  for (let k = 0; k <= last; k++) {
+    const marks = inArc(s, ctx, mount, shot, enemies, tracks, k);
+    if (!marks.length) continue;
+    const target = marks[0];
+    if (tier === 'able') return { k, target };   // the first moment she bears
+    // Crack: weigh every moment of the pass and take the best of them.
+    const from = posAt(tracks, s, k), at = posAt(tracks, target, k);
+    const trel = relBearing(at, from, target.facing);
+    const rake = trel === 0 ? 1.5 : trel === 3 ? 2 : 1;
+    const score = rake * 10 - dist(from, at);
+    if (!best || score > best.score) best = { k, target, score };
+  }
+  return best;
 }
 
 // Which batteries would draw their charge this turn to obey the order: loaded
@@ -116,7 +168,7 @@ export function wouldDraw(s, ctx, shot) {
 }
 
 // Every loaded mount that bears fires this turn — broadside and chasers alike.
-export function fireAll(s, ctx, shot, results) {
+export function fireAll(s, ctx, shot, results, tracks) {
   if (shot === 'hold') return; // hold your fire and keep what is in the guns
   if (shot === 'fireparty') {  // every hand is at the buckets, not the guns
     results.push({ s, none: true, fireparty: true });
@@ -139,9 +191,10 @@ export function fireAll(s, ctx, shot, results) {
     // Guns fire what they hold when it bears, whatever the standing order —
     // the fastest way to empty a gun has always been to fire it.
     const held = s.guns[id].shot;
-    const heldMarks = acceptsShot(mount, held) ? inArc(s, ctx, mount, held, enemies) : [];
-    if (heldMarks.length) {
-      results.push(resolveShot(s, heldMarks[0], id, mount, held, ctx.wind));
+    const moment = acceptsShot(mount, held)
+      ? chooseMoment(s, ctx, mount, held, enemies, tracks) : null;
+    if (moment) {
+      results.push(resolveShot(s, moment.target, id, mount, held, ctx.wind, tracks, moment.k));
       if (held !== shot && acceptsShot(mount, shot)) {
         // the free reload after firing takes the ordered charge
         s.guns[id] = { reload: reloadTurns(s, mount, shot), shot };
@@ -162,16 +215,21 @@ export function fireAll(s, ctx, shot, results) {
   if (!fired && !drew && !heeled) results.push({ s, none: true, broadside: bore, empty: !anyLoaded(s) });
 }
 
-function resolveShot(s, t, mountId, mount, shot, wind) {
-  const d = dist(s, t);
+function resolveShot(s, t, mountId, mount, shot, wind, tracks, k) {
+  // Everything about the shot is measured where the two ships actually were
+  // when it was fired, which during a pass is not where they end the turn.
+  const from = tracks ? posAt(tracks, s, k) : { q: s.q, r: s.r };
+  const at = tracks ? posAt(tracks, t, k) : { q: t.q, r: t.r };
+  const d = dist(from, at);
   // The countdown also ticks at the end of this turn, which reloadTurns allows for.
   s.guns[mountId] = { reload: reloadTurns(s, mount, shot), shot };
-  const trel = relBearing(t, s, t.facing);
+  const trel = relBearing(at, from, t.facing);
   const rake = trel === 0 ? 'bow' : (trel === 3 ? 'stern' : null);
   const mult = (rake === 'bow' ? 1.5 : rake === 'stern' ? 2 : 1) *
     (mount.power || 1) * gunType(mount.gun).power;
   const rangeMod = d >= 3 ? -1 : 0;
   const r = { s, t, shot, rake, mount: mountId, label: mount.label || mountId,
+    step: k === undefined ? null : k, from, at,
     chaser: !!mount.chaser, hull: 0, rig: 0, crew: 0, rudder: false, d };
   // Raking fires down the whole length of her — a far bigger mark than a beam.
   const p = Math.min(0.95, hitChance(s, t, mount, shot, d, wind) * (rake ? 1.15 : 1));
@@ -200,6 +258,11 @@ function resolveShot(s, t, mountId, mount, shot, wind) {
 }
 
 export function applyFireResult(r, log) {
+  // Idempotent: the view applies a shot as it animates it during the pass, and
+  // the turn loop sweeps up anything a view chose not to animate — a headless
+  // run has no view at all. Damage must land exactly once either way.
+  if (r.applied) return;
+  r.applied = true;
   const who = r.s.isYou ? 'you' : 'foe';
   if (r.none) {
     if (!r.s.isYou) return;
