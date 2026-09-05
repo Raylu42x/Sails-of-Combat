@@ -7,7 +7,7 @@ import { progress } from './progress.js';
 //   verdict  — after one
 //   picker   — opened mid-action from LEVELS, so a fight can be abandoned or
 //              restarted without reloading the page
-export function createBanner(el, onStart) {
+export function createBanner(el, onStart, onShare) {
   const titleEl = el.querySelector('#bTitle');
   const textEl = el.querySelector('#bText');
   const listEl = el.querySelector('#bList');
@@ -24,6 +24,7 @@ export function createBanner(el, onStart) {
   };
   showAar(false);
   const altBtn = el.querySelector('#bAlt');
+  const shareBtn = el.querySelector('#bShare');
   let pending = SCENARIOS[0];
   let current = SCENARIOS[0];
   let mode = 'briefing';
@@ -94,6 +95,10 @@ export function createBanner(el, onStart) {
     statsEl.style.display = (v.stats && v.stats.length) ? '' : 'none';
     aarEl.style.display = (history && history.length) ? '' : 'none';
     aarEl.scrollTop = aarEl.scrollHeight;
+    // A fight is a seed and a list of orders, so the whole action fits in a
+    // link. Someone else opening it watches exactly the action you sailed.
+    shareBtn.style.display = onShare ? '' : 'none';
+    shareBtn.textContent = 'Copy replay link';
     btn.textContent = 'Sail again';
     primaryFn = () => start(pending);
     altBtn.style.display = 'none';
@@ -133,6 +138,19 @@ export function createBanner(el, onStart) {
 
   btn.addEventListener('pointerdown', () => { sfx.wake(); primaryFn(); });
   altBtn.addEventListener('pointerdown', () => { sfx.click(); if (altFn) altFn(); });
+
+  shareBtn.addEventListener('pointerdown', async () => {
+    if (!onShare) return;
+    const link = onShare();
+    try {
+      await navigator.clipboard.writeText(link);
+      shareBtn.textContent = 'Link copied';
+    } catch (e) {
+      shareBtn.textContent = 'Copy failed — link is in the address bar';
+      location.hash = link.split('#')[1] || '';
+    }
+    setTimeout(() => { shareBtn.textContent = 'Copy replay link'; }, 1800);
+  });
 
   return {
     showBriefing, showVerdict, showPicker, hide,

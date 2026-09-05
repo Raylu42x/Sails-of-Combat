@@ -1,6 +1,7 @@
 import { createEmitter } from './events.js';
 import { dist, unitPos } from './hex.js';
 import { setSeed, chance } from './rng.js';
+import { encodeReplay, encodeTurn } from './replay.js';
 import { createBoard } from './board.js';
 import { applyHelm, createShip, crewFrac, madeFast, mountsOf } from './ship.js';
 import { attOf, maybeShift, windLabel } from './wind.js';
@@ -21,7 +22,11 @@ export function createGame(view) {
   let ctx = null;
 
   function start(scenarioId, seed) {
-    setSeed(seed === undefined ? null : seed);
+    // Every fight is seeded whether or not anyone asked — that is what makes it
+    // replayable afterwards. An unseeded game could never be shown to anyone
+    // else, or turned into a test when it went wrong.
+    const used = (seed === undefined || seed === null) ? Math.floor(Math.random() * 1e9) : seed;
+    setSeed(used);
     // A level may be named, or handed over whole — which is how the editor
     // plays a level that is not in levels/ yet, and how a replay reruns one.
     const scenario = (scenarioId && typeof scenarioId === 'object')
@@ -33,7 +38,8 @@ export function createGame(view) {
       scenario, map, wind, ships, board: createBoard(map),
       tally: { fired: 0, hits: 0, dealt: { hull: 0, rig: 0, crew: 0 },
         taken: { hull: 0, rig: 0, crew: 0 }, meleeDealt: 0, meleeLost: 0 },
-      turn: 1, over: false, busy: false, log, prizes: [], afterTurns: 0,
+      turn: 1, over: false, busy: false, log, prizes: [],
+      seed: used, orderLog: [], afterTurns: 0,
       you: ships.find(s => s.isYou),
     };
     Object.assign(orders, { helm: 0, sails: 'battle', shot: 'round', grapple: 'no', melee: 'press', cable: 'stand' });
@@ -280,6 +286,8 @@ export function createGame(view) {
 
   async function execute() {
     if (!ctx || ctx.over || ctx.busy) return;
+    // Recorded before anything resolves: these are the orders as given.
+    ctx.orderLog.push(encodeTurn(orders));
     ctx.busy = true;
     bus.emit('busy', true);
 
@@ -436,5 +444,13 @@ export function createGame(view) {
     finish(v);
   }
 
-  return { fightOver, prizeWaiting, endAction, on: bus.on.bind(bus), emit: bus.emit.bind(bus), start, state, setOrder, getOrders, execute, visibleTo, log };
+  // The fight so far, short enough to paste into a message or a URL.
+  function replayString() {
+    if (!ctx) return '';
+    const level = ctx.scenario;
+    const levelId = (level && typeof level === 'object') ? level.id : level;
+    return encodeReplay({ levelId, seed: ctx.seed, turns: [] }).replace(/~$/, '~') + ctx.orderLog.join('');
+  }
+
+  return { replayString, fightOver, prizeWaiting, endAction, on: bus.on.bind(bus), emit: bus.emit.bind(bus), start, state, setOrder, getOrders, execute, visibleTo, log };
 }

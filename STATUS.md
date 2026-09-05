@@ -66,3 +66,9 @@ signal Bryan relies on. Worth writing the line before starting, not after.
   in-page deuteranopia simulation: the two ships become the same colour and are
   still told apart.
   (worktree: ../Sails-of-Combat-ui-colourblind, branch agent/ui-colourblind)
+- [core-replay] DONE every fight is seeded and its orders recorded, so an action
+  is a ~60-character string: 'Copy replay link' on the verdict screen, and a link
+  with one in it plays that action back exactly (#49). tests/replay.mjs records
+  and replays a fight in all ten levels and is now in CI — it doubles as the
+  guard on nothing in core/ calling Math.random() directly.
+  (worktree: ../Sails-of-Combat-core-replay, branch agent/core-replay)

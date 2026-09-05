@@ -104,6 +104,12 @@ defensive.
 
 ## Randomness
 
+Everything random goes through `core/rng.js`, and every game is seeded whether
+or not a seed was asked for. That is what makes `tests/replay.mjs` possible: a
+recorded fight replays to an identical world. The day something in `core/` calls
+`Math.random()` directly, that test is what notices.
+
+
 Everything random goes through `core/rng.js`. `setSeed(n)` swaps in a
 deterministic generator, which is what makes the smoke test reproducible. Never
 call `Math.random()` inside `core/`.
