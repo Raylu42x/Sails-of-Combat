@@ -16,6 +16,6 @@ If she strikes, you may as well not come home.`,
     { type: 'brig', side: 'friendly', role: 'player', name: 'Rattler', q: 4, r: 6, facing: 0 },
     { type: 'merchantman', side: 'friendly', role: 'ward', ai: 'flee', name: 'Marguerite', q: 5, r: 7, facing: 0,
       stats: { hull: 14, crew: 9 } },
-    { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Vautour', q: 2, r: 3, facing: 3 },
+    { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Vautour', personality: 'prizehunter', q: 2, r: 3, facing: 3 },
   ],
 };

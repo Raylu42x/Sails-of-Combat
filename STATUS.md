@@ -54,3 +54,9 @@ signal Bryan relies on. Worth writing the line before starting, not after.
   map, and game.start() accepts a level object as well as an id — which is also
   what a replay (#49) will need.
   (worktree: ../Sails-of-Combat-tools-level-editor, branch agent/tools-level-editor)
+- [core-ai-personalities] DONE five captains as weight sets over the one move
+  search — cautious, boarder, prize-hunter, reckless, professional (#51). Each
+  changes standoff range, how much she values a bearing, what she loads, whether
+  she boards, and the nerve at which she breaks off. Her sheet names it. Cast
+  into Convoy Duty, Cutting Out and The Rat Run; the editor offers it.
+  (worktree: ../Sails-of-Combat-core-ai-personalities, branch agent/core-ai-personalities)

@@ -133,6 +133,22 @@ level is made harder or easier without inventing a ship class. Objectives
 that exist today are `duel`, `chase`, `protect` and `survive`; a new type is a
 new case in `src/core/objectives.js`.
 
+## Captains
+
+Not every enemy wants the same fight. A hostile ship carries a personality —
+weights on the same move search, not a different AI — and her ship sheet says
+which, so how you meet her is a decision rather than a surprise:
+
+| | |
+| --- | --- |
+| **professional** | holds the weather gage and fights at effective range |
+| **cautious** | keeps her distance, breaks off once she is hurt |
+| **boarder** | means to come aboard, and sweeps your deck with grape first |
+| **prize-hunter** | wants you afloat and saleable — fires at your rigging |
+| **reckless** | closes to pistol shot and double-shots her guns |
+
+Levels set it per ship (`personality: 'boarder'`), and the editor offers it.
+
 ## The level editor
 
 `editor.html` — open it the same way you open the game. It is a tool for people

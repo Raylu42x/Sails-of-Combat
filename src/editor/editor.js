@@ -3,7 +3,7 @@
 // tool and the game can never disagree about what a level means.
 import { createChart } from './chart.js';
 import {
-  DEPTHS, HEIGHTS, MOODS, OBJECTIVES, ROLES, WIND_NAMES,
+  DEPTHS, HEIGHTS, MOODS, OBJECTIVES, PERSONALITIES, ROLES, WIND_NAMES,
   blankLevel, cells, inBounds, islandAt, shipAt, shipClasses, toFile, waterAt,
 } from './model.js';
 import { playtest, validate } from './playtest.js';
@@ -52,7 +52,7 @@ function onPick(cell, ev) {
       side: first ? 'friendly' : 'hostile',
       role: first ? 'player' : 'enemy',
       ai: first ? null : 'engage',
-      name: first ? 'Alacrity' : 'Unnamed',
+      name: first ? 'Alacrity' : 'Unnamed', personality: 'professional',
       q, r, facing: 0, anchor: 'up', stats: {},
     };
     level.ships.push(s);
@@ -132,6 +132,11 @@ function paintShipPanel() {
   const role = $('sRole');
   if (!role.options.length) for (const r of ROLES) role.appendChild(option(r, r));
   role.value = s.role;
+  const person = $('sPersonality');
+  if (!person.options.length) {
+    for (const p of Object.values(PERSONALITIES)) person.appendChild(option(p.id, p.name + ' — ' + p.tell));
+  }
+  person.value = s.personality || 'professional';
   const ai = $('sAi');
   if (!ai.options.length) { ai.appendChild(option('', '— none (you) —')); for (const m of MOODS) ai.appendChild(option(m, m)); }
   ai.value = s.ai || '';
@@ -170,7 +175,7 @@ const refreshers = [
 ];
 const clampInt = (v, lo, hi) => Math.max(lo, Math.min(hi, parseInt(v, 10) || lo));
 
-for (const [id, key] of [['sType', 'type'], ['sName', 'name'], ['sSide', 'side'], ['sRole', 'role'], ['sAi', 'ai']]) {
+for (const [id, key] of [['sType', 'type'], ['sName', 'name'], ['sSide', 'side'], ['sRole', 'role'], ['sAi', 'ai'], ['sPersonality', 'personality']]) {
   $(id).addEventListener(id === 'sName' ? 'input' : 'change', () => {
     const s = chart.selected; if (!s) return;
     s[key] = $(id).value || null;
@@ -285,6 +290,7 @@ async function fillOpen() {
       ships: sc.ships.map(sh => ({
         type: sh.type, side: sh.side, role: sh.role, ai: sh.ai || null,
         name: sh.name, q: sh.q, r: sh.r, facing: sh.facing || 0,
+        personality: sh.personality || 'professional',
         anchor: sh.anchor || 'up', stats: { ...(sh.stats || {}) },
       })),
     };

@@ -28,7 +28,9 @@ export function createShip(spec) {
     rigging: stat('rigging', t.rigging), rigMax: stat('rigging', t.rigging),
     crew: stat('crew', t.crew), crewMax: stat('crew', t.crew),
     sails: 'battle', guns, rudderJam: 0, inIrons: false, struck: false,
-    anchor: spec.anchor || 'up', grounded: false, fire: 0, destroyed: false, idleTurns: 0, lastCell: null,
+    anchor: spec.anchor || 'up', grounded: false, fire: 0, destroyed: false,
+    // What this captain wants out of the fight (AI ships only).
+    personality: spec.personality || 'professional', idleTurns: 0, lastCell: null,
     grappledTo: null, seen: true,
   };
 }
