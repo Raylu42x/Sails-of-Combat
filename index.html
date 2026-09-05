@@ -99,6 +99,15 @@
   </div>
 </div>
 
+<script>
+// Registration lives OUTSIDE the module graph on purpose: if a broken deploy
+// (or a stale cache mix) kills the modules, this still runs, the worker still
+// installs, and the page heals itself on the next load. Inside main.js it
+// could never rescue the exact failure it exists to prevent.
+if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
+  navigator.serviceWorker.register('sw.js').catch(function () { /* no worker, no harm */ });
+}
+</script>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>
