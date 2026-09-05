@@ -1,0 +1,91 @@
+/* The editor borrows the game's palette so a chart drawn here looks like the
+   chart it will become. Layout is its own: a big canvas and a column of panels. */
+.ed {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px 14px;
+  height: 100dvh; padding: 10px 14px 14px;
+}
+.ed header { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.ed h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--brass); }
+.head-right { display: flex; align-items: center; gap: 8px; }
+.note { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-dim); }
+
+.chartbox { position: relative; border: 1px solid var(--chart); min-height: 0; }
+#chart { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
+
+.panels { overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+.panels section { border: 1px solid var(--chart); background: var(--panel); padding: 8px 10px 10px; }
+.panels h2 {
+  margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-dim);
+}
+.panels label {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-dim);
+  margin-bottom: 5px;
+}
+.panels label.check { justify-content: flex-start; text-transform: none; letter-spacing: 0.02em; }
+.panels input[type="text"], .panels input[type="number"], .panels select, .panels textarea {
+  font-family: "IBM Plex Mono", monospace; font-size: 12px;
+  background: var(--sea); color: var(--ink); border: 1px solid var(--chart);
+  padding: 4px 6px; min-width: 0; flex: 1 1 auto;
+}
+.panels textarea { width: 100%; resize: vertical; line-height: 1.5; }
+.row-fields { display: flex; flex-wrap: wrap; gap: 6px; }
+.row-fields label { flex: 1 1 120px; }
+
+.tools { display: flex; flex-wrap: wrap; gap: 4px; }
+.tools button {
+  flex: 1 1 auto; font-family: inherit; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 8px; cursor: pointer;
+  border: 1px solid var(--chart); background: transparent; color: var(--ink-dim);
+}
+.tools button.on { border-color: var(--brass); color: var(--brass); background: rgba(217,164,65,0.1); }
+.hint { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; line-height: 1.5; color: var(--ink-dim); margin: 6px 0 0; }
+
+.facing { display: flex; gap: 3px; }
+.facing button {
+  font-family: inherit; font-size: 11px; font-weight: 700; padding: 3px 6px; cursor: pointer;
+  border: 1px solid var(--chart); background: transparent; color: var(--ink-dim);
+}
+.facing button.on { border-color: var(--brass); color: var(--brass); }
+.stats { border-top: 1px solid var(--chart); margin-top: 6px; padding-top: 6px; }
+.stats > span { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); }
+
+button.primary {
+  font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 8px 14px; cursor: pointer;
+  border: 1px solid var(--brass); background: var(--brass); color: var(--sea);
+}
+button.primary:disabled { opacity: 0.5; cursor: default; }
+.head-right button:not(.primary), .sheet-actions button:not(.primary), button.danger {
+  font-family: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 8px 12px; cursor: pointer;
+  border: 1px solid var(--chart); background: transparent; color: var(--ink-dim);
+}
+button.danger { color: var(--signal); border-color: var(--signal); width: 100%; margin-top: 8px; }
+
+.sheet {
+  position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
+  background: rgba(11,27,36,0.9); padding: 24px;
+}
+.sheet[hidden] { display: none; }
+.sheet-inner {
+  background: var(--panel); border: 1px solid var(--chart); padding: 14px 16px;
+  max-width: 760px; width: 100%; max-height: 82vh; display: flex; flex-direction: column; gap: 10px;
+}
+.sheet h3 { margin: 0; font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brass); }
+.sheet pre {
+  margin: 0; overflow: auto; flex: 1 1 auto;
+  font-family: "IBM Plex Mono", monospace; font-size: 11.5px; line-height: 1.55;
+  color: var(--ink); background: var(--sea); border: 1px solid var(--chart); padding: 10px;
+  white-space: pre-wrap; word-break: break-word;
+}
+.sheet-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+@media (max-width: 900px) {
+  .ed { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 46vh minmax(0, 1fr); }
+  .panels { grid-column: 1; }
+}

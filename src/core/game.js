@@ -22,7 +22,10 @@ export function createGame(view) {
 
   function start(scenarioId, seed) {
     setSeed(seed === undefined ? null : seed);
-    const scenario = scenarioById(scenarioId);
+    // A level may be named, or handed over whole — which is how the editor
+    // plays a level that is not in levels/ yet, and how a replay reruns one.
+    const scenario = (scenarioId && typeof scenarioId === 'object')
+      ? scenarioId : scenarioById(scenarioId);
     const map = mapById(scenario.map);
     const wind = Object.assign({ from: 0, speed: 2, shiftEvery: 3 }, map.wind);
     const ships = scenario.ships.map(createShip);

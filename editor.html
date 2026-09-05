@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sails of Combat — level editor</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="src/styles/base.css">
+<link rel="stylesheet" href="src/styles/editor.css">
+</head>
+<body>
+<div class="ed">
+  <header>
+    <h1>Level editor</h1>
+    <div class="head-right">
+      <span class="note" id="note"></span>
+      <select id="fOpen" title="Open an existing level to edit"></select>
+      <button id="btnPlaytest" class="primary">Play it 60 times</button>
+      <button id="btnExport" class="primary">Export file</button>
+    </div>
+  </header>
+
+  <div class="chartbox"><canvas id="chart"></canvas></div>
+
+  <div class="panels">
+    <section>
+      <h2>Level</h2>
+      <label>Id <input id="fId" type="text"></label>
+      <label>Name <input id="fName" type="text"></label>
+      <label>Goal <select id="fObjType"></select></label>
+      <div id="objFields" class="row-fields"></div>
+    </section>
+
+    <section>
+      <h2>Chart</h2>
+      <label>Columns <input id="fCols" type="number" min="5" max="20"></label>
+      <label>Rows <input id="fRows" type="number" min="5" max="20"></label>
+      <label class="check"><input id="fScroll" type="checkbox"> Open ocean (chart follows the fight)</label>
+      <label>Wind from <select id="fWindFrom"></select></label>
+      <label>Strength <select id="fWindSpeed"></select></label>
+      <label>Shifts every <input id="fShift" type="number" min="1" max="12"> turns</label>
+    </section>
+
+    <section>
+      <h2>Paint</h2>
+      <div class="tools" id="tools"></div>
+      <p class="hint" id="toolHint">Click the chart to paint. Click a ship to select her.</p>
+    </section>
+
+    <section id="shipPanel">
+      <h2>Ship</h2>
+      <div id="shipEmpty" class="hint">No ship selected. Pick the Ship tool and click open water to place one.</div>
+      <div id="shipFields" hidden>
+        <label>Class <select id="sType"></select></label>
+        <label>Name <input id="sName" type="text"></label>
+        <label>Side <select id="sSide"></select></label>
+        <label>Role <select id="sRole"></select></label>
+        <label>AI <select id="sAi"></select></label>
+        <label>Facing <span class="facing" id="sFacing"></span></label>
+        <label class="check"><input id="sAnchor" type="checkbox"> Starts at anchor</label>
+        <div class="stats">
+          <span>Overrides</span>
+          <label>hull <input id="stHull" type="number" min="1"></label>
+          <label>rig <input id="stRig" type="number" min="1"></label>
+          <label>crew <input id="stCrew" type="number" min="1"></label>
+          <label>quality <input id="stQuality" type="number" step="0.05" min="0.5" max="1.5"></label>
+        </div>
+        <button id="sDelete" class="danger">Remove this ship</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Briefing</h2>
+      <textarea id="fBriefing" rows="8" placeholder="What the captain is told before the action. This is the level's voice — write it yourself."></textarea>
+    </section>
+  </div>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-inner">
+    <h3 id="sheetTitle">Export</h3>
+    <pre id="sheetBody"></pre>
+    <div class="sheet-actions">
+      <button id="btnCopy" class="primary">Copy</button>
+      <button id="btnDownload">Download file</button>
+      <button id="btnClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="src/editor/editor.js"></script>
+</body>
+</html>
