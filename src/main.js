@@ -32,7 +32,33 @@ const logView = createLog(document.getElementById('log'));
 const hud = createHud(document.getElementById('ships'), document.getElementById('turnLabel'), game);
 const orders = createOrders(document, document.getElementById('hint'), game, refresh);
 const banner = createBanner(document.getElementById('banner'), startScenario,
-  () => location.origin + location.pathname + '#r=' + game.replayString());
+  () => location.origin + location.pathname + '#r=' + game.replayString(),
+  debugReport);
+
+// Everything needed to reproduce and reason about a bug, as pasteable text:
+// which build, which level, the whole world state, the replay, and the log.
+function debugReport() {
+  const ctx = game.state();
+  if (!ctx) return 'no action running';
+  const ships = ctx.ships.map(s =>
+    s.name + ' (' + s.type.id + ') hull ' + s.hull + '/' + s.hullMax +
+    ' rig ' + s.rigging + '/' + s.rigMax + ' crew ' + s.crew + '/' + s.crewMax +
+    ' q' + s.quality + ' @' + s.q + ',' + s.r + ' f' + s.facing +
+    (s.struck ? ' STRUCK' : '') + (s.taken ? ' TAKEN' : '') +
+    (s.grappledTo ? ' GRAPPLED' : '') + (s.offBoard ? ' OFFBOARD' : ''));
+  return [
+    '### Sails of Combat report',
+    'build: ' + document.lastModified + ' · ' + navigator.userAgent,
+    'level: ' + ctx.scenario.id + ' · turn ' + ctx.turn +
+      ' · wind from ' + ctx.wind.from + ' speed ' + ctx.wind.speed +
+      (ctx.over ? ' · OVER' : ''),
+    'replay: ' + location.origin + location.pathname + '#r=' + game.replayString(),
+    '',
+    'ships:', ...ships,
+    '',
+    'log:', ...logView.history().map(l => l.msg),
+  ].join('\n');
+}
 
 function refresh() {
   const ctx = game.state();
