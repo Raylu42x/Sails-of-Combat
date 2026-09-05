@@ -7,7 +7,7 @@ import { progress } from './progress.js';
 //   verdict  — after one
 //   picker   — opened mid-action from LEVELS, so a fight can be abandoned or
 //              restarted without reloading the page
-export function createBanner(el, onStart, onShare) {
+export function createBanner(el, onStart, onShare, onReport) {
   const titleEl = el.querySelector('#bTitle');
   const textEl = el.querySelector('#bText');
   const listEl = el.querySelector('#bList');
@@ -25,6 +25,12 @@ export function createBanner(el, onStart, onShare) {
   showAar(false);
   const altBtn = el.querySelector('#bAlt');
   const shareBtn = el.querySelector('#bShare');
+  // A bug report you can paste into a chat: build, level, state, replay, log.
+  const reportBtn = document.createElement('button');
+  reportBtn.id = 'bReport';
+  reportBtn.textContent = 'Copy report';
+  reportBtn.style.display = 'none';
+  shareBtn.after(reportBtn);
   let pending = SCENARIOS[0];
   let current = SCENARIOS[0];
   let mode = 'briefing';
@@ -55,6 +61,8 @@ export function createBanner(el, onStart, onShare) {
   function showBriefing(sc) {
     pending = sc;
     mode = 'briefing';
+    reportBtn.style.display = 'none';
+    shareBtn.style.display = 'none';
     showAar(false);
     titleEl.textContent = sc.name;
     titleEl.style.color = 'var(--brass)';
@@ -98,6 +106,7 @@ export function createBanner(el, onStart, onShare) {
     // A fight is a seed and a list of orders, so the whole action fits in a
     // link. Someone else opening it watches exactly the action you sailed.
     shareBtn.style.display = onShare ? '' : 'none';
+    reportBtn.style.display = onReport ? '' : 'none';
     shareBtn.textContent = 'Copy replay link';
     btn.textContent = 'Sail again';
     primaryFn = () => start(pending);
@@ -109,6 +118,7 @@ export function createBanner(el, onStart, onShare) {
   // Mid-action: pick another level, restart this one, or go back to it.
   function showPicker() {
     mode = 'picker';
+    reportBtn.style.display = onReport ? '' : 'none';
     el.dataset.inAction = '1';
     showAar(false);
     pending = current;
@@ -138,6 +148,17 @@ export function createBanner(el, onStart, onShare) {
 
   btn.addEventListener('pointerdown', () => { sfx.wake(); primaryFn(); });
   altBtn.addEventListener('pointerdown', () => { sfx.click(); if (altFn) altFn(); });
+
+  reportBtn.addEventListener('pointerdown', async () => {
+    if (!onReport) return;
+    try {
+      await navigator.clipboard.writeText(onReport());
+      reportBtn.textContent = 'Report copied';
+    } catch (e) {
+      reportBtn.textContent = 'Copy failed';
+    }
+    setTimeout(() => { reportBtn.textContent = 'Copy report'; }, 1800);
+  });
 
   shareBtn.addEventListener('pointerdown', async () => {
     if (!onShare) return;

@@ -34,6 +34,11 @@ export function evaluate(ctx) {
       text: 'The ' + you.name + ' can fight no longer. You haul down your colours.' };
   }
 
+  // No verdict while the decks are contested: night cannot hide a ship that
+  // is lashed to an enemy, and no clock runs out in the middle of a melee.
+  // The boarding resolves first; whatever verdict is due fires after.
+  if (you.grappledTo) return null;
+
   const hostiles = alive(ships, s => s.side === 'hostile');
   const quarry = ships.find(s => s.role === 'quarry');
   const ward = ships.find(s => s.role === 'ward');
