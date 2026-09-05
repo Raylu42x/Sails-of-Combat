@@ -4,6 +4,7 @@ import { createHud } from './ui/hud.js';
 import { createLog } from './ui/log.js';
 import { createOrders } from './ui/orders.js';
 import { createBanner } from './ui/banner.js';
+import { createReference } from './ui/reference.js';
 import { decodeReplay, runReplay } from './core/replay.js';
 import { createLayers } from './ui/layers.js';
 import { sfx } from './audio/sfx.js';
@@ -74,6 +75,9 @@ game.on('change', () => {
   if (prize) endBtn.title = 'Break off and leave ' + prize.name + ' where she lies';
 });
 // LEVELS opens the picker over the action: abandon it, restart it, or go back.
+const reference = createReference(document.body);
+document.getElementById('help').addEventListener('pointerdown', ev => { ev.stopPropagation(); reference.toggle(); });
+
 document.getElementById('restart').addEventListener('pointerdown', () => {
   const ctx = game.state();
   if (!ctx || ctx.busy) return;
@@ -104,7 +108,7 @@ const onResize = () => {
 // about it, so idle turns still need frames.
 (function idleFlames() {
   const ctx = game.state();
-  if (ctx && !ctx.busy && ctx.ships.some(s => s.fire && !s.struck)) renderer.draw();
+  if (ctx && !ctx.busy && (ctx.ships.some(s => s.fire && !s.struck) || (ctx.marksLeft || []).length)) renderer.draw();
   requestAnimationFrame(idleFlames);
 })();
 
@@ -146,6 +150,7 @@ window.addEventListener('keydown', ev => {
     case ' ': case 'Enter': if (!execBtn.disabled) { sfx.wake(); game.execute(); } break;
     case 'l': case 'L': if (!ctx.busy) banner_showPicker(); break;
     case 'm': case 'M': sfx.toggleMute(); paintMute(); break;
+    case '?': case '/': reference.toggle(); break;
     case 'd': case 'D': layers.toggle('depth'); break;
     case 'g': case 'G': layers.toggle('arcs'); break;
     default:

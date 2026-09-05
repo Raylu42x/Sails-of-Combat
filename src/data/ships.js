@@ -69,6 +69,13 @@ export const SHIP_TYPES = {
       stern: chaser('stern'),
     },
   },
+  hulk: {
+    id: 'hulk', draught: 'medium', name: 'Old hulk', short: 'hulk',
+    profile: { len: 0.66, beam: 0.44, bluff: 0.75, masts: 0, transom: 1 },
+    rig: 'sq', speeds: [0, 0, 0, 0], turnMax: 0, tackOdds: 0,
+    hull: 14, rigging: 1, crew: 3, quality: 0.5,
+    mounts: {},
+  },
   guardacosta: {
     id: 'guardacosta', draught: 'deep', name: 'Guarda costa', short: 'guarda costa',
     profile: { len: 0.80, beam: 0.36, bluff: 0.45, masts: 3, transom: 0.9 },

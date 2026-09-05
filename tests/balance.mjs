@@ -5,6 +5,8 @@
 import { createGame } from '../src/core/game.js';
 import { SCENARIOS } from '../levels/index.js';
 import { aiOrders } from '../src/core/ai.js';
+import { pathOf } from '../src/core/movement.js';
+import { attOf } from '../src/core/wind.js';
 import { dist, dirBetween } from '../src/core/hex.js';
 
 const RUNS = Number(process.argv[2]) || 60;
@@ -42,6 +44,28 @@ for (const sc of SCENARIOS) {
         game.setOrder('helm', String(plan.helm));
         game.setOrder('sails', plan.sails);
         game.setOrder('shot', plan.shot);
+        // A sailing-school level is not won by fighting, so the fighting AI has
+        // nothing to say about it. Steer for the nearest mark instead, choosing
+        // the heading that actually carries her closest — which is the whole
+        // lesson the level is teaching.
+        const mark = (ctx.marksLeft || [])
+          .slice().sort((a2, b2) => dist(you, a2) - dist(you, b2))[0];
+        if (mark) {
+          let bestF = you.facing, bestScore = -99;
+          for (let f = 0; f < 6; f++) {
+            let t = (f - you.facing + 6) % 6; if (t > 3) t -= 6;
+            if (Math.abs(t) > you.turnMax) continue;
+            const irons = attOf(f, ctx.wind.from) === 0;
+            const track = pathOf(you, ctx, { facing: f, sails: 'battle', inIrons: irons });
+            const end = track.length ? track[track.length - 1] : you;
+            const score = -dist(end, mark) * 2 + track.length + (track.length ? 3 : -10);
+            if (score > bestScore) { bestScore = score; bestF = f; }
+          }
+          let turn = (bestF - you.facing + 6) % 6; if (turn > 3) turn -= 6;
+          game.setOrder('helm', String(turn));
+          game.setOrder('sails', 'battle');
+          game.setOrder('shot', 'round');
+        }
         // aiOrders only ever looks at ships still fighting, so once she strikes
         // the reference player has nothing to steer at. Close on the prize
         // instead — she is worth nothing at three hexes.
@@ -65,7 +89,11 @@ for (const sc of SCENARIOS) {
         game.setOrder('grapple', prize ? 'prize' : worthBoarding ? 'yes' : 'no');
         // Break off only when there is nothing left to fight AND nothing left
         // to take — a prize three hexes off is still worth closing on.
-        if (!foe && !floating && game.fightOver()) { game.endAction(); continue; }
+        // ...but never with marks still to fetch: the school is not a fight,
+        // and leaving early is how it looked broken.
+        if (!foe && !floating && !(ctx.marksLeft || []).length && game.fightOver()) {
+          game.endAction(); continue;
+        }
       }
       await game.execute();
     }

@@ -560,6 +560,23 @@ export function createRenderer(canvas, box, game, layers) {
       }
     }
 
+    // Marks still to fetch, in a sailing-school level.
+    for (const m of ctx.marksLeft || []) {
+      const p = L.px(m.q, m.r);
+      const t = now() / 400;
+      cx.strokeStyle = C('--brass'); cx.lineWidth = 2;
+      cx.globalAlpha = 0.6 + 0.4 * Math.sin(t + m.q);
+      cx.beginPath(); cx.arc(p.x, p.y, L.S * 0.42, 0, Math.PI * 2); cx.stroke();
+      cx.beginPath(); cx.arc(p.x, p.y, L.S * 0.16, 0, Math.PI * 2); cx.stroke();
+      cx.globalAlpha = 1;
+      if (m.label) {
+        cx.fillStyle = C('--brass');
+        cx.font = '700 9px "Barlow Condensed", sans-serif';
+        cx.textAlign = 'center';
+        cx.fillText(m.label, p.x, p.y - L.S * 0.55);
+      }
+    }
+
     for (const s of ctx.ships) {
       if (s.isYou) continue;
       if (s.offBoard) { lastSeen.delete(s.uid); continue; } // fallen astern, over the horizon

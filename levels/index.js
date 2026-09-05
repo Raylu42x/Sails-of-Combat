@@ -14,6 +14,7 @@
 //   ship.stats  optional { hull, rigging, crew, quality } override, for
 //               tuning a level without inventing a new ship class
 
+import school from './school.js';
 import duel from './duel.js';
 import chase from './chase.js';
 import protect from './protect.js';
@@ -26,6 +27,7 @@ import squall from './squall.js';
 import ratrun from './ratrun.js';
 
 export const SCENARIOS = [
+  school,
   duel,
   chase,
   protect,

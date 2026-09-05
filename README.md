@@ -6,6 +6,18 @@ step, no dependencies and no server logic. You give orders — helm, sails, guns
 
 ## Try it at: https://sailsofcombat.kervian.com/
 
+## Learning it
+
+**Sailing School** is the first level: no enemy, four marks laid out in the
+roads, and an old hulk moored for gun practice. It teaches the things the rest
+of the game assumes — that she will not sail into the eye of the wind, that a
+reach is faster than running before it, and what range does to gunnery — where
+being wrong costs a turn instead of the ship.
+
+The **?** button (or the `?` key) opens a reference card: the whole vocabulary on
+one screen, reachable mid-action, because nobody reads a README with a guarda
+costa crossing their stern.
+
 ## Playing
 
 Each turn you set four orders and press **Make it so**:
