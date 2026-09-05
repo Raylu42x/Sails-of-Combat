@@ -263,3 +263,6 @@
 .aarlog .foe { color: var(--signal); }
 .aarlog .big { color: var(--flash); }
 .aarlog .turnhead { color: var(--ink); }
+
+/* What kind of captain she is, on her ship sheet. */
+.sheet .tell { margin-top: 6px; color: var(--signal); font-size: 11.5px; line-height: 1.5; }

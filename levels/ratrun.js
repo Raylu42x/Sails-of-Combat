@@ -13,9 +13,9 @@ Get clear, or last until dark.`,
   ships: [
     { type: 'merchantman', side: 'friendly', role: 'player', name: 'Marguerite', q: 2, r: 8, facing: 1,
       stats: { crew: 8, hull: 13, rigging: 9 } },
-    { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Vulture', q: 7, r: 2, facing: 4,
+    { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Vulture', personality: 'prizehunter', q: 7, r: 2, facing: 4,
       stats: { hull: 4, crew: 5, quality: 0.85 } },
-    { type: 'sloop', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Kite', q: 7, r: 1, facing: 4,
+    { type: 'sloop', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Kite', personality: 'boarder', q: 7, r: 1, facing: 4,
       stats: { hull: 5, crew: 6, quality: 0.85 } },
   ],
 };

@@ -14,7 +14,7 @@ Light airs, a bank on either hand, and holding ground under the headland if you 
     { type: 'sloop', side: 'friendly', role: 'player', name: 'Alacrity', q: 1, r: 8, facing: 0 },
     { type: 'brig', side: 'hostile', role: 'prize', ai: 'engage', name: 'Santa Rita',
       q: 5, r: 1, facing: 3, anchor: 'down', stats: { crew: 9, quality: 0.95 } },
-    { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Guarda del puerto',
+    { type: 'cutter', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Guarda del puerto', personality: 'cautious',
       q: 8, r: 4, facing: 0, stats: { hull: 5, crew: 5, quality: 0.8 } },
   ],
 };

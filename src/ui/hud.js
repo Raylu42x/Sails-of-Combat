@@ -1,4 +1,5 @@
 import { dist } from '../core/hex.js';
+import { personalityOf } from '../data/personalities.js';
 import { ATT_NAMES, windLabel } from '../core/wind.js';
 import { isLoaded, mountsOf, shortHanded } from '../core/ship.js';
 import { gunType } from '../data/ships.js';
@@ -46,6 +47,9 @@ export function createHud(shipsEl, turnEl, game) {
       '<div>' + (t.rig === 'fa' ? 'fore-and-aft rig' : 'square rig') + ' · ' + esc(t.draught) + ' draught · ' + q + ' crew</div>' +
       '<div class="dim">' + speeds + ' <span>(hexes by point of sail)</span></div>' +
       '<div class="dim">helm ' + t.turnMax + ' point' + (t.turnMax === 1 ? '' : 's') + ' a turn · tacks ' + Math.round(t.tackOdds * 100) + '%</div>' +
+      // What kind of fight she is looking for. Knowing it is what makes the
+      // choice of how to meet her a decision rather than a surprise.
+      (s.isYou ? '' : '<div class="tell">' + esc(personalityOf(s.personality).tell) + '</div>') +
       '<div class="mounts">' + mounts + '</div>' +
       '<div class="cond">hull ' + s.hull + '/' + s.hullMax + ' · rigging ' + s.rigging + '/' + s.rigMax + ' · crew ' + s.crew + '/' + s.crewMax + '</div>' +
       '<div class="dim">' + hands + (s.rudderJam > 0 ? ' · rudder fouled' : '') + (s.grounded ? ' · aground' : s.anchor !== 'up' ? ' · at anchor' : '') + '</div>' +

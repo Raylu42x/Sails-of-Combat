@@ -3,6 +3,7 @@
 // The shape here is exactly the shape of a file in levels/ — the editor is a
 // way of writing that file, not a format of its own.
 import { SHIP_TYPES } from '../data/ships.js';
+export { PERSONALITIES, PERSONALITY_IDS } from '../data/personalities.js';
 
 export const OBJECTIVES = {
   duel:    { label: 'Duel — beat every hostile ship', fields: { breakOffDist: 9 } },
@@ -61,6 +62,9 @@ const q = s => "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"
 function shipLine(s) {
   const bits = [`type: ${q(s.type)}`, `side: ${q(s.side)}`, `role: ${q(s.role)}`];
   if (s.ai && s.role !== 'player') bits.push(`ai: ${q(s.ai)}`);
+  if (s.personality && s.personality !== 'professional' && s.role !== 'player') {
+    bits.push(`personality: ${q(s.personality)}`);
+  }
   bits.push(`name: ${q(s.name)}`, `q: ${s.q}`, `r: ${s.r}`, `facing: ${s.facing}`);
   if (s.anchor === 'down') bits.push("anchor: 'down'");
   const stats = Object.entries(s.stats || {}).filter(([, v]) => v !== '' && v != null);

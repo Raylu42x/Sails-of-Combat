@@ -3,6 +3,7 @@ import { rnd } from './rng.js';
 import { attOf } from './wind.js';
 import { isLoaded, mountsOf } from './ship.js';
 import { draughtOf } from '../data/ships.js';
+import { personalityOf } from '../data/personalities.js';
 import { acceptsShot, rangeOf } from './combat.js';
 import { pathOf } from './movement.js';
 import { distanceField } from './route.js';
@@ -21,6 +22,12 @@ export function aiOrders(s, ctx) {
   const wind = ctx.wind;
   const wv = { x: Math.cos(angleOf(wind.from)), y: Math.sin(angleOf(wind.from)) };
   const mood = s.ai || 'engage';
+  const who = personalityOf(s.personality);
+  // Hurt badly enough, a captain with anything to lose stops trying to win and
+  // starts trying to leave. How badly is the difference between a coastguard
+  // doing a job and a privateer who has already spent his luck.
+  const beaten = (s.hull / s.hullMax) < who.nerve || (s.crew / s.crewMax) < who.nerve;
+  const wants = beaten && mood !== 'escort' ? 'flee' : mood;
   const ward = mood === 'escort' ? ctx.ships.find(o => o.role === 'ward' && !o.struck) : null;
   const helms = [];
   for (let h = -s.turnMax; h <= s.turnMax; h++) helms.push(h);
@@ -51,22 +58,22 @@ export function aiOrders(s, ctx) {
         if (!isLoaded(s, id)) continue;
         if (m.arcs.includes(relBearing(pos, foe, f))) armed = true;
       }
-      if (mood === 'flee') {
+      if (wants === 'flee') {
         score += Math.min(sailed, 12) * 2.2;               // put water between us
         if (armed && d <= 2) score += 2;                   // a parting shot is welcome
         if (sails === 'full') score += 2.5;
         if (sails === 'takein') score -= 3;
-      } else if (mood === 'escort' && ward) {
+      } else if (wants === 'escort' && ward) {
         score -= Math.abs(ward2.at(pos.q, pos.r) - 1.5) * 2.5; // stay by the charge
         score -= Math.abs(sailed - 1.5);
         if (armed && d <= 3) score += 4;
       } else {
-        score -= Math.abs(sailed - 1.5) * 2;               // lay her alongside
-        if (armed && d <= 3) score += 6;
+        score -= Math.abs(sailed - who.standoff) * 2;      // the range she likes
+        if (armed && d <= 3) score += who.armed;
         if (sails === 'full' && armed && d <= 3) score -= 5; // full sail silences the guns
         if (sails === 'takein') score -= 2;
       }
-      if (ctx.board.shotBlocked(pos, foe)) score += mood === 'flee' ? 3 : -3; // land in the way
+      if (ctx.board.shotBlocked(pos, foe)) score += wants === 'flee' ? 3 : -3; // land in the way
       // A ship lying motionless is a ship not being handled. Near a bank every
       // move either touches the ground or opens the range, so standing still
       // used to win the argument every turn and she would park there for the
@@ -78,17 +85,23 @@ export function aiOrders(s, ctx) {
       if (ctx.board.isShoal(pos.q, pos.r)) score -= 5 * draughtOf(s);
       if (attOf(f, wind.from) === 0) score -= 100;
       // A nudge to keep the weather gage (or run off before it, when fleeing).
-      const gage = ((foe.q - pos.q) * 1.5 * wv.x + (foe.r - pos.r) * 1.5 * wv.y) * (mood === 'flee' ? 0.03 : -0.06);
+      const gage = ((foe.q - pos.q) * 1.5 * wv.x + (foe.r - pos.r) * 1.5 * wv.y) * (wants === 'flee' ? 0.03 : -0.06);
       score += gage + rnd() * 0.8;
       if (!best || score > best.score) best = { helm, sails, score, endDist: d };
     }
   }
   if (!best) best = { helm: 0, sails: 'battle', endDist: dist(s, foe) };
 
+  // What she loads is what she is after.
   let shot = 'round';
-  if (mood === 'flee') shot = best.endDist <= 2 ? 'chain' : 'round';
-  else if (best.endDist <= 1) shot = foe.crew / foe.crewMax > 0.45 ? 'grape' : 'double';
-  else if (best.endDist <= 2 && foe.rigging / foe.rigMax > 0.45 && ctx.turn <= 6) shot = 'chain';
+  const close = best.endDist <= 1, near = best.endDist <= 2;
+  if (wants === 'flee') shot = near ? 'chain' : 'round';
+  else if (who.aim === 'rigging') shot = near ? 'chain' : 'round';          // take her whole
+  else if (who.aim === 'crew') shot = close ? 'grape' : near ? 'chain' : 'round';
+  else if (who.aim === 'smash') shot = close ? 'double' : 'round';
+  else if (who.aim === 'hull') shot = 'round';                              // no fancy business
+  else if (close) shot = foe.crew / foe.crewMax > 0.45 ? 'grape' : 'double';
+  else if (near && foe.rigging / foe.rigMax > 0.45 && ctx.turn <= 6) shot = 'chain';
 
   // Drawing a good charge to load a better one wastes the turn that matters.
   // If something is loaded and will bear, fire what is in the gun.
@@ -103,7 +116,11 @@ export function aiOrders(s, ctx) {
 // Does this ship want to board? Only the aggressive ones, and only when winning.
 export function aiWantsGrapple(s, ctx) {
   if (s.ai !== 'engage') return false;
+  const who = personalityOf(s.personality);
+  if (!who.boarding) return false;                     // some captains never board
   const foe = nearestEnemy(s, ctx);
-  if (!foe) return false;
-  return foe.crew * 1.2 < s.crew && s.crew / s.crewMax > 0.5 && dist(s, foe) === 1;
+  if (!foe || dist(s, foe) !== 1) return false;
+  // A boarder will take an even fight; a careful one wants the odds first.
+  const edge = 1.2 / who.boarding;
+  return foe.crew * edge < s.crew && s.crew / s.crewMax > 0.5;
 }
