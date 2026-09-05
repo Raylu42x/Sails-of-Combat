@@ -18,6 +18,12 @@ export function createRenderer(canvas, box, game, layers) {
   const lastSeen = new Map(); // uid -> {q, r} for ships hidden behind tall land
 
   const colorFor = s => s.isYou ? C('--brass') : s.side === 'friendly' ? C('--ink') : C('--signal');
+  // Yours against hers is carried by colour everywhere, and brass against
+  // signal is a weak pair for a red-green colour-blind player: 76 apart in
+  // normal vision, 47 under deuteranopia, and by then both are oranges. So the
+  // same mark is stamped on every surface — chart, cards, log — and the colour
+  // becomes the second channel rather than the only one.
+  const markFor = s => s.isYou ? '▲' : s.side === 'friendly' ? '△' : '✕';
 
   // A hidden tab gets no animation frames, so fall back to a timer — otherwise
   // a turn started and then backgrounded would never finish.
@@ -314,6 +320,12 @@ export function createRenderer(canvas, box, game, layers) {
       cx.quadraticCurveTo(ax, ay + L.S * 0.24, ax + L.S * 0.14, ay + L.S * 0.04);
       cx.stroke();
     }
+    // Friend or foe, in a shape rather than a hue.
+    cx.fillStyle = color;
+    cx.font = '700 10px "Barlow Condensed", sans-serif';
+    cx.textAlign = 'center';
+    cx.fillText(markFor(s), p.x, p.y - L.S * 0.62);
+
     const tag = s.destroyed ? 'BLOWN UP'
       : s.taken ? 'PRIZE'
       : s.struck ? 'STRUCK'

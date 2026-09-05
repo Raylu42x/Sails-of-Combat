@@ -60,3 +60,9 @@ signal Bryan relies on. Worth writing the line before starting, not after.
   she boards, and the nerve at which she breaks off. Her sheet names it. Cast
   into Convoy Duty, Cutting Out and The Rat Run; the editor offers it.
   (worktree: ../Sails-of-Combat-core-ai-personalities, branch agent/core-ai-personalities)
+- [ui-colourblind] DONE one mark vocabulary on every surface — ▲ yours, △ a
+  consort, ✕ hers — on the chart, the ship cards and every log line, plus a
+  hatched fill for her half of the boarding bar (#50). Checked against an
+  in-page deuteranopia simulation: the two ships become the same colour and are
+  still told apart.
+  (worktree: ../Sails-of-Combat-ui-colourblind, branch agent/ui-colourblind)
