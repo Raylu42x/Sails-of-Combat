@@ -4,6 +4,7 @@ import { createHud } from './ui/hud.js';
 import { createLog } from './ui/log.js';
 import { createOrders } from './ui/orders.js';
 import { createBanner } from './ui/banner.js';
+import { decodeReplay, runReplay } from './core/replay.js';
 import { createLayers } from './ui/layers.js';
 import { sfx } from './audio/sfx.js';
 
@@ -28,7 +29,8 @@ renderer = createRenderer(canvas, box, game, layers);
 const logView = createLog(document.getElementById('log'));
 const hud = createHud(document.getElementById('ships'), document.getElementById('turnLabel'), game);
 const orders = createOrders(document, document.getElementById('hint'), game, refresh);
-const banner = createBanner(document.getElementById('banner'), startScenario);
+const banner = createBanner(document.getElementById('banner'), startScenario,
+  () => location.origin + location.pathname + '#r=' + game.replayString());
 
 function refresh() {
   const ctx = game.state();
@@ -110,10 +112,21 @@ window.addEventListener('resize', onResize);
 window.addEventListener('orientationchange', onResize);
 
 // Boot: set the first scenario up behind the briefing so the chart is drawn.
-game.start(banner.pending.id);
+// A link with a fight in it opens that fight, not the menu.
+// A link with a fight in it opens that fight rather than the menu: the seed and
+// the orders are the whole action, so it plays out exactly as it was sailed.
+const shared = decodeReplay(new URLSearchParams(location.hash.slice(1)).get('r') || '');
+game.start(shared ? shared.levelId : banner.pending.id, shared ? shared.seed : undefined);
 renderer.resize();
 refresh();
-banner.showBriefing(banner.pending);
+if (shared) {
+  banner.hide();
+  logView.write('Replaying a recorded action — ' + shared.turns.length + ' turns.', 'turnhead');
+  runReplay(game, shared)
+    .catch(() => logView.write('That replay does not match this version of the game.', 'big'));
+} else {
+  banner.showBriefing(banner.pending);
+}
 
 // Keyboard orders: the helm on the arrows, shot on the number keys, space to
 // give the order. Cheap to add, and the whole game becomes playable one-handed.

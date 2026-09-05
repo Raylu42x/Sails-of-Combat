@@ -133,6 +133,20 @@ level is made harder or easier without inventing a ship class. Objectives
 that exist today are `duel`, `chase`, `protect` and `survive`; a new type is a
 new case in `src/core/objectives.js`.
 
+## Replays
+
+A fight is a seed and a list of orders — everything else, including every roll
+and every choice the enemy makes, follows from those, because all randomness
+goes through `src/core/rng.js`. So the whole action fits in a link.
+
+**Copy replay link** on the end-of-action screen gives you one; opening it plays
+that action back exactly as it was sailed. A twelve-turn fight is under ninety
+characters.
+
+`node tests/replay.mjs` records a fight in every level and replays it, failing if
+a single ship ends up anywhere different. It runs in CI, which is also the guard
+on the rule that nothing in `src/core/` may call `Math.random()` directly.
+
 ## Reading it without colour
 
 Yours against hers used to be carried by colour alone — brass for your ship, red

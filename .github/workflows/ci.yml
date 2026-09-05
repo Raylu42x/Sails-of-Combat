@@ -26,5 +26,8 @@ jobs:
       - name: Levels are winnable and losable
         run: node tests/balance.mjs
 
+      - name: Recorded fights replay exactly
+        run: node tests/replay.mjs
+
       - name: Modules all load
         run: node --input-type=module -e "import('./src/core/game.js')"
