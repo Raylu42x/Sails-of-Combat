@@ -5,9 +5,8 @@ export function watchForUpdates() {
   if (!('serviceWorker' in navigator)) return;
   if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
 
-  navigator.serviceWorker.register('sw.js').catch(() => {
-    // No worker is not an error: the game runs exactly as it did before.
-  });
+  // Registration happens in index.html, outside the module graph, so a
+  // broken deploy can still install the worker that will heal it.
 
   let refreshing = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
