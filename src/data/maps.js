@@ -84,7 +84,16 @@ export const MAPS = {
   },
 };
 
-export const mapById = id => MAPS[id] || MAPS.openSea;
+// A level may name a shared chart ('cays') or carry its own inline — which is
+// what the level editor writes, since drawing the water and placing the ships
+// on it are the same act.
+export const mapById = id => {
+  if (id && typeof id === 'object') {
+    return Object.assign({ id: 'inline', name: 'Uncharted water', cols: 9, rows: 10, scroll: false,
+      wind: { from: 0, speed: 2, shiftEvery: 3 }, islands: [], water: [] }, id);
+  }
+  return MAPS[id] || MAPS.openSea;
+};
 
 // Terrain lookup built once per game: "q,r" -> 'low' | 'tall'
 export function terrainOf(map) {

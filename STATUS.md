@@ -48,3 +48,9 @@ One line per agent/human task. Check here before picking a worktree name.
 Note for whoever picks this up: entries above were backfilled in one go — I let
 STATUS.md go stale for several tasks while working fast, which is exactly the
 signal Bryan relies on. Worth writing the line before starting, not after.
+- [tools-level-editor] DONE editor.html — draw the chart, place ships, set the
+  goal, write the briefing, play it 60 times against the real rules, export the
+  file (#47). Opens existing levels for editing. Levels may now carry an inline
+  map, and game.start() accepts a level object as well as an id — which is also
+  what a replay (#49) will need.
+  (worktree: ../Sails-of-Combat-tools-level-editor, branch agent/tools-level-editor)

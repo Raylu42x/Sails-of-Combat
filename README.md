@@ -133,6 +133,24 @@ level is made harder or easier without inventing a ship class. Objectives
 that exist today are `duel`, `chase`, `protect` and `survive`; a new type is a
 new case in `src/core/objectives.js`.
 
+## The level editor
+
+`editor.html` — open it the same way you open the game. It is a tool for people
+building levels, not part of the game, so nothing links to it.
+
+Draw the chart (islands low or tall, shoals, anchorages), set the wind, place
+the ships and pick their class, side, role and mood, choose the goal, and write
+the briefing. **Play it 60 times** runs the game's own rules over what you have
+drawn and reports how often a captain choosing orders at random wins — the one
+thing you cannot judge by eye, and how The Long Chase was found to be
+unwinnable. **Export file** gives you the level to save into `levels/`.
+
+It writes files; it cannot change the game by itself. Nothing is live until you
+commit what it gives you.
+
+Opening an existing level to edit it works too: the levels are plain modules, so
+the editor imports them rather than parsing anything.
+
 ## Tests
 
 ```bash
