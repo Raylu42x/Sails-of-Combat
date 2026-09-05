@@ -13,6 +13,6 @@ Square rig runs down the sea handsomely, and claws off it badly. Do not let the 
   ships: [
     { type: 'brig', side: 'friendly', role: 'player', name: 'Rattler', q: 4, r: 6, facing: 1 },
     { type: 'brig', side: 'hostile', role: 'enemy', ai: 'engage', name: 'Sans Pareil', q: 5, r: 0, facing: 3,
-      stats: { quality: 1.0 } },
+      stats: { crew: 13, quality: 1.1 } },
   ],
 };
