@@ -2,7 +2,7 @@ import { dist } from '../core/hex.js';
 import { personalityOf } from '../data/personalities.js';
 import { ATT_NAMES, windLabel } from '../core/wind.js';
 import { isLoaded, mountsOf, shortHanded } from '../core/ship.js';
-import { TIER_NAME, tierOf } from '../core/combat.js';
+import { TIER_NAME, fireTier } from '../core/combat.js';
 import { gunType } from '../data/ships.js';
 
 // Ship cards are built from the scenario, so a two-ship duel and a four-ship
@@ -32,7 +32,7 @@ export function createHud(shipsEl, turnEl, game) {
   function openSheet(s) {
     const t = s.type;
     // One source of truth: the same tier that decides when her guns fire.
-    const q = TIER_NAME[tierOf(s)];
+    const q = TIER_NAME[fireTier(s)];
     const speeds = t.speeds.map((v, i) => ATT_NAMES[i] + ' ' + v).join(' · ');
     const mounts = mountsOf(s).map(([id, m]) => {
       const g = gunType(m.gun);
