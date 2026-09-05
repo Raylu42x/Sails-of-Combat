@@ -78,3 +78,10 @@ signal Bryan relies on. Worth writing the line before starting, not after.
   hauling off with the job unfinished counted as a win, and the balance harness
   broke off school levels early because there was nothing armed to fight.
   (worktree: ../Sails-of-Combat-data-tutorial, branch agent/data-tutorial)
+- [infra-cache-skew] DONE sw.js fetches the app's own files network-first, so a
+  stale module can never be mixed into a working set; a bar offers a reload when
+  a new build takes over (#40). NOT verified end to end: the in-app browser here
+  blocks service-worker script fetches, so registration could not be exercised.
+  What is verified is that the game is unaffected when registration fails. Wants
+  a check on iOS Safari, and the Cloudflare cache rule is still worth doing.
+  (worktree: ../Sails-of-Combat-infra-cache-skew, branch agent/infra-cache-skew)

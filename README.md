@@ -220,6 +220,26 @@ because boarding is hard to reach by chance. The third plays every level with a
 competent stand-in captain and prints win rates — tuning by feel is how Convoy
 Duty once ended up unwinnable.
 
+## Deploys and stale files
+
+The game is thirty-odd ES modules, each fetched and cached under its own URL. Two
+deploys in an evening and a device can end up holding this morning's `main.js`
+with last night's `banner.js` — a mixture that never existed, failing silently.
+
+`sw.js` is a service worker that fetches the app's own files **network first**,
+keeping a cached copy only as a fallback for when there is no network at all. A
+stale file can then never be mixed into a working set: either everything comes
+from the network, or everything comes from one cached vintage. If the browser
+will not register a worker, nothing changes and the game runs exactly as before.
+
+Two things worth knowing:
+
+- The **Cloudflare cache rule** for the domain is the other half of this, and it
+  is a dashboard change rather than a repo one: let GitHub Pages' own `ETag` and
+  `max-age` through for `text/javascript`, or bypass cache for `/src/*`.
+- To get rid of the worker entirely: clear site data for the domain, or open
+  DevTools → Application → Service Workers → Unregister.
+
 ## Docs
 
 - [docs/WORKING-TOGETHER.md](docs/WORKING-TOGETHER.md) — branch, rebase and merge flow when several people are on it at once

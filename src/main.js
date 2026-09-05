@@ -5,6 +5,7 @@ import { createLog } from './ui/log.js';
 import { createOrders } from './ui/orders.js';
 import { createBanner } from './ui/banner.js';
 import { createReference } from './ui/reference.js';
+import { watchForUpdates } from './ui/updates.js';
 import { decodeReplay, runReplay } from './core/replay.js';
 import { createLayers } from './ui/layers.js';
 import { sfx } from './audio/sfx.js';
@@ -75,6 +76,7 @@ game.on('change', () => {
   if (prize) endBtn.title = 'Break off and leave ' + prize.name + ' where she lies';
 });
 // LEVELS opens the picker over the action: abandon it, restart it, or go back.
+watchForUpdates();
 const reference = createReference(document.body);
 document.getElementById('help').addEventListener('pointerdown', ev => { ev.stopPropagation(); reference.toggle(); });
 
