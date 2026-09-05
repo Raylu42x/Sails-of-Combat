@@ -39,7 +39,9 @@ export function createGame(view) {
       tally: { fired: 0, hits: 0, dealt: { hull: 0, rig: 0, crew: 0 },
         taken: { hull: 0, rig: 0, crew: 0 }, meleeDealt: 0, meleeLost: 0 },
       turn: 1, over: false, busy: false, log, prizes: [],
-      seed: used, orderLog: [], afterTurns: 0,
+      seed: used, orderLog: [],
+      // Marks still to fetch, for a sailing-school level.
+      marksLeft: ((scenario.objective || {}).marks || []).map(m => ({ ...m })), afterTurns: 0,
       you: ships.find(s => s.isYou),
     };
     Object.assign(orders, { helm: 0, sails: 'battle', shot: 'round', grapple: 'no', melee: 'press', cable: 'stand' });
@@ -358,6 +360,20 @@ export function createGame(view) {
         applyHelm(s, Math.max(-l, Math.min(l, aiPlan.get(s.uid).helm)), ctx.wind, log);
       }
       const paths = moveShips(ctx, log);
+      // A mark counts as fetched if she passes over it, not only if she stops
+      // on it — a buoy does not care whether you anchored beside it.
+      if (ctx.marksLeft && ctx.marksLeft.length) {
+        const track = [from.get(you.uid), ...(paths[you.uid] || [])].filter(Boolean);
+        const before = ctx.marksLeft.length;
+        ctx.marksLeft = ctx.marksLeft.filter(m => !track.some(c => c.q === m.q && c.r === m.r));
+        const got = before - ctx.marksLeft.length;
+        if (got) {
+          log(got === 1 ? 'Mark fetched — well sailed.' : got + ' marks fetched — handsomely done.', 'you');
+          if (ctx.marksLeft.length) {
+            log(ctx.marksLeft.length + ' to go.', 'you');
+          }
+        }
+      }
       // Where every ship was at each hex of the pass, so gunnery can happen
       // during the manoeuvre rather than only after it. Index 0 is where she
       // started; a ship that stops early simply stays at her last hex.
@@ -438,8 +454,18 @@ export function createGame(view) {
   function endAction() {
     if (!ctx || ctx.over) return;
     ctx.ended = true;
-    const v = evaluate(ctx) || { done: true, won: true, title: 'Action Ended',
-      text: 'You haul off and leave her to the sea.' };
+    // Hauling off with the job unfinished is not a victory. If the objective
+    // had something still to say — marks unfetched, a quarry still running, a
+    // prize not manned — evaluate() would have said so; falling through to here
+    // means the action simply stopped, which is a draw at best.
+    const unfinished = (ctx.marksLeft || []).length;
+    const v = evaluate(ctx) || {
+      done: true, won: false, draw: true, title: 'Action Ended',
+      text: unfinished
+        ? unfinished + ' mark' + (unfinished === 1 ? '' : 's') + ' left unfetched. ' +
+          'The school is not over until they are all aboard.'
+        : 'You haul off and leave her to the sea.',
+    };
     bus.emit('change', ctx);
     finish(v);
   }

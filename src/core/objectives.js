@@ -107,6 +107,24 @@ export function evaluate(ctx) {
       }
       return null;
     }
+    // A sailing school: no enemy, only marks to fetch. Teaching the helm, the
+    // points of sail and the fact that you cannot sail into the eye of the wind
+    // needs a level where being wrong costs a turn instead of the ship.
+    case 'marks': {
+      const left = (ctx.marksLeft || []).length;
+      if (!left) {
+        return { done: true, won: true, title: 'Well Sailed',
+          text: 'Every mark fetched. You have the handling of her now — ' +
+            'which is most of the fighting, and all of the getting away.' };
+      }
+      if (obj.turnLimit && turn > obj.turnLimit) {
+        return { done: true, won: false, title: 'Time Up',
+          text: left + ' mark' + (left === 1 ? '' : 's') + ' still to fetch. ' +
+            'Watch the wind: she will not sail into the eye of it, and a reach is ' +
+            'faster than running dead before it.' };
+      }
+      return null;
+    }
     case 'survive': {
       if (obj.turnLimit && turn > obj.turnLimit) {
         return { done: true, won: true, title: 'Weathered It', text: 'You have held on long enough.' };

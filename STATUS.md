@@ -72,3 +72,9 @@ signal Bryan relies on. Worth writing the line before starting, not after.
   and replays a fight in all ten levels and is now in CI — it doubles as the
   guard on nothing in core/ calling Math.random() directly.
   (worktree: ../Sails-of-Combat-core-replay, branch agent/core-replay)
+- [data-tutorial] DONE Sailing School as the first level — a 'marks' objective,
+  four buoys, a moored hulk with no guns to practise on — plus a reference card
+  on the ? button and key (#48). Fixed two rules bugs found while building it:
+  hauling off with the job unfinished counted as a win, and the balance harness
+  broke off school levels early because there was nothing armed to fight.
+  (worktree: ../Sails-of-Combat-data-tutorial, branch agent/data-tutorial)
