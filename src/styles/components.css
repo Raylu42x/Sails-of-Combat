@@ -266,3 +266,20 @@
 
 /* What kind of captain she is, on her ship sheet. */
 .sheet .tell { margin-top: 6px; color: var(--signal); font-size: 11.5px; line-height: 1.5; }
+
+/* --- a second channel wherever colour alone said yours or hers -------------
+   Brass against signal is a weak pair under red-green colour blindness (76
+   apart in normal vision, 47 under deuteranopia, both oranges by then). Every
+   surface carries the same mark, so the colour is confirmation, not the
+   message. */
+.log .you::before { content: '▲ '; opacity: 0.8; }
+.log .foe::before { content: '✕ '; opacity: 0.8; }
+.log .big::before { content: '! '; opacity: 0.8; }
+
+/* Hers is hatched, yours is solid — the deck bar reads without colour. */
+.m-tick.on-foe {
+  background: repeating-linear-gradient(
+    45deg, var(--signal) 0 2px, rgba(0,0,0,0.45) 2px 4px);
+}
+.aarlog .you::before { content: '▲ '; opacity: 0.8; }
+.aarlog .foe::before { content: '✕ '; opacity: 0.8; }

@@ -133,6 +133,18 @@ level is made harder or easier without inventing a ship class. Objectives
 that exist today are `duel`, `chase`, `protect` and `survive`; a new type is a
 new case in `src/core/objectives.js`.
 
+## Reading it without colour
+
+Yours against hers used to be carried by colour alone — brass for your ship, red
+for the enemy — and that pair is weak under red-green colour blindness: 76 apart
+in normal vision, 47 under deuteranopia, and by then both are oranges. Roughly
+one man in twelve.
+
+So the same mark is stamped on every surface: **▲ yours · △ a consort · ✕ hers**,
+on the chart, on the ship cards and at the head of every log line. The boarding
+bar fills solid for you and hatched for her. Colour is now confirmation rather
+than the message.
+
 ## Captains
 
 Not every enemy wants the same fight. A hostile ship carries a personality —

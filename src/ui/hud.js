@@ -70,7 +70,10 @@ export function createHud(shipsEl, turnEl, game) {
           '<div class="bar"><span class="lb"><span class="lb-full">' + l +
           '</span><span class="lb-abbr">' + l[0] + '</span></span><div class="track">' +
           '<div class="fill" data-k="' + l.toLowerCase() + '"></div></div></div>').join('');
-      card.querySelector('.name').textContent = s.name + ' · ' + s.type.short;
+      // The same friend/foe mark the chart uses, so the card and the ship on
+      // the water are matched by shape as well as by colour.
+      const mark = s.isYou ? '▲' : s.side === 'friendly' ? '△' : '✕';
+      card.querySelector('.name').textContent = mark + ' ' + s.name + ' · ' + s.type.short;
       card.addEventListener('pointerdown', () => {
         const ctx2 = game.state();
         if (ctx2 && !ctx2.busy) openSheet(s);
