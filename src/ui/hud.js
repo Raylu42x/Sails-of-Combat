@@ -2,6 +2,7 @@ import { dist } from '../core/hex.js';
 import { personalityOf } from '../data/personalities.js';
 import { ATT_NAMES, windLabel } from '../core/wind.js';
 import { isLoaded, mountsOf, shortHanded } from '../core/ship.js';
+import { TIER_NAME, tierOf } from '../core/combat.js';
 import { gunType } from '../data/ships.js';
 
 // Ship cards are built from the scenario, so a two-ship duel and a four-ship
@@ -30,7 +31,8 @@ export function createHud(shipsEl, turnEl, game) {
   }
   function openSheet(s) {
     const t = s.type;
-    const q = s.quality >= 1.1 ? 'crack' : s.quality >= 1 ? 'able' : 'green';
+    // One source of truth: the same tier that decides when her guns fire.
+    const q = TIER_NAME[tierOf(s)];
     const speeds = t.speeds.map((v, i) => ATT_NAMES[i] + ' ' + v).join(' · ');
     const mounts = mountsOf(s).map(([id, m]) => {
       const g = gunType(m.gun);
@@ -44,7 +46,7 @@ export function createHud(shipsEl, turnEl, game) {
     const hands = ['full complement', 'short-handed — reloads drag', 'skeleton crew — cannot carry full sail'][shortHanded(s)];
     inner.innerHTML =
       '<h3>' + esc(s.name) + ' · ' + esc(t.name) + '</h3>' +
-      '<div>' + (t.rig === 'fa' ? 'fore-and-aft rig' : 'square rig') + ' · ' + esc(t.draught) + ' draught · ' + q + ' crew</div>' +
+      '<div>' + (t.rig === 'fa' ? 'fore-and-aft rig' : 'square rig') + ' · ' + esc(t.draught) + ' draught · ' + q + '</div>' +
       '<div class="dim">' + speeds + ' <span>(hexes by point of sail)</span></div>' +
       '<div class="dim">helm ' + t.turnMax + ' point' + (t.turnMax === 1 ? '' : 's') + ' a turn · tacks ' + Math.round(t.tackOdds * 100) + '%</div>' +
       // What kind of fight she is looking for. Knowing it is what makes the
