@@ -8,7 +8,7 @@ import { attOf, maybeShift, windLabel } from './wind.js';
 import { moveShips } from './movement.js';
 import { applyFireResult, boardingRound, fireAll, startBoarding, tryGrapple } from './combat.js';
 import { aiOrders, aiWantsGrapple } from './ai.js';
-import { checkStrike, evaluate, prizeInReach } from './objectives.js';
+import { checkStrike, evaluate, prizeInReach, PRIZE_REACH } from './objectives.js';
 import { mapById } from '../data/maps.js';
 import { scenarioById } from '../../levels/index.js';
 
@@ -248,6 +248,35 @@ export function createGame(view) {
     bus.emit('turn', ctx.turn);
   }
 
+  // Bryan's ruling: when the fighting is done and ONE beaten ship waits in
+  // reach, the captain and crew are competent — she is taken without the
+  // player spelling out the seamanship. With more than one prize (or short
+  // of hands) the choices are real, so the manual window stays: crews are
+  // finite, and an unsupervised prize is not a settled thing.
+  function autoPossessLastPrize() {
+    if (!ctx || ctx.over || ctx.ended || ctx.you.struck || ctx.you.grappledTo) return;
+    if (ctx.ships.some(o => !o.struck && o.side !== ctx.you.side)) return;
+    const takeable = ctx.ships.filter(o => o.struck && !o.taken && !o.destroyed &&
+      !o.offBoard && o.side !== ctx.you.side && dist(ctx.you, o) <= PRIZE_REACH);
+    if (takeable.length !== 1) return;
+    const prize = takeable[0];
+    const party = Math.max(2, Math.round(prize.crewMax * 0.25));
+    if (ctx.you.crew - party < 3) return;
+    ctx.you.crew -= party;
+    prize.taken = true;
+    prize.side = ctx.you.side;
+    const condition = prize.hull / prize.hullMax;
+    prize.value = Math.round(100 * (0.35 + 0.65 * condition) *
+      (0.6 + 0.4 * (prize.rigging / prize.rigMax)));
+    ctx.prizes.push(prize);
+    log('The sea is yours alone. You run down to the ' + prize.name + ' and put ' +
+      party + ' hands aboard — she is your prize.', 'big');
+    log(condition > 0.6
+      ? prize.name + ' swims well: the court will pay handsomely for her.'
+      : prize.name + ' is knocked about, and the court will price her accordingly.', 'you');
+    bus.emit('prize', prize);
+  }
+
   function finish(verdict) {
     // What the prize court would pay you for, and what you burned instead.
     const took = ctx.prizes || [];
@@ -430,6 +459,7 @@ export function createGame(view) {
     }
 
     endOfTurn();
+    autoPossessLastPrize();
     // A new turn starts with a fresh helm. The default is to stay on course —
     // and when the wind has shifted there is no default at all: the UI holds
     // Make It So until the captain gives her a course.

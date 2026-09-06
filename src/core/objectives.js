@@ -13,7 +13,7 @@ const alive = (ships, pred) => ships.filter(s => !s.struck && pred(s));
 // turns to lay alongside her — not the rest of the night. Terrain charts made
 // the old 4-and-3 cruel: a hulk two banks away was unreachable before the
 // window shut, and one five hexes off closed the action with no window at all.
-const PRIZE_REACH = 6;
+export const PRIZE_REACH = 6;
 const PRIZE_WINDOW = 5;
 export function prizeInReach(ctx) {
   const you = ctx.you;
