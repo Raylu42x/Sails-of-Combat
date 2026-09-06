@@ -51,7 +51,7 @@ function debugReport() {
     'build: ' + document.lastModified + ' · ' + navigator.userAgent,
     'level: ' + ctx.scenario.id + ' · turn ' + ctx.turn +
       ' · wind from ' + ctx.wind.from + ' speed ' + ctx.wind.speed +
-      (ctx.over ? ' · OVER' : ''),
+      (ctx.over ? ' · OVER: ' + (ctx.verdict ? ctx.verdict.title + (ctx.verdict.won ? ' (won)' : ' (lost)') : 'ended') : ''),
     'replay: ' + location.origin + location.pathname + '#r=' + game.replayString(),
     '',
     'ships:', ...ships,

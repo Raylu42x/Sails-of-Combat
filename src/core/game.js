@@ -266,6 +266,7 @@ export function createGame(view) {
       notes.push(lost.map(o => o.name).join(', ') + ' blew up. Nothing to sell, and nobody to sell it.');
     }
     if (notes.length) verdict.text = verdict.text + '\n\n' + notes.join(' ');
+    ctx.verdict = verdict; // so the debug report can say how it ended
     // The after-action report: what the fight cost and what it paid.
     const t = ctx.tally, d = t.dealt, k = t.taken;
     verdict.stats = [
