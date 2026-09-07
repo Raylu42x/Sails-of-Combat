@@ -247,3 +247,7 @@ Two things worth knowing:
 - [docs/ROADMAP.md](docs/ROADMAP.md) — what to build next, and why
 - [docs/IDEAS.md](docs/IDEAS.md) — the unfiltered idea bank behind the roadmap
 - [docs/decisions/](docs/decisions/) — decision records
+
+## License
+
+MIT — see [LICENSE](LICENSE) for details.
