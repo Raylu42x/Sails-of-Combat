@@ -50,7 +50,18 @@ act means no run masters everything — replay value is a different set of
 choices, not a bigger number. The act ends with the offer: a letter of
 marque, or something less legal, and the schooner.
 
-## Act III — The Schooner
+## Act III — The Sloop, then the Schooner (the full cycle)
+
+The act OPENS in the sloop — the ALACRITY, which resolves her marked-OPEN
+question: she is the free captain's first ship. Scrappy underdog work where
+a brig is a fight you decline (the sloop can beat one only flawlessly — she
+outranges and outpoints, but two carronade broadsides end her), and
+avoiding that fight IS the gameplay. Prize money and reputation earn the
+SCHOONER as the act's midpoint reward, her refit shaped by the act-II
+specialization. And the finale closes the campaign's full circle: BRIGS
+AGAIN — the class you began in — but now fought the new way, out-thought
+instead of out-slugged. The navy may even send YOUR OLD BRIG, under some
+patron's favourite, to hunt her former first lieutenant.
 
 Fore-and-aft, weatherly, LONG GUNS — the out-point-and-out-range game, the
 strategic counter to brawling brigs (historically the Baltimore-privateer
@@ -137,5 +148,5 @@ the warrant ratings, and the between-mission screen.
 - What actually happened at the convoy (the fog).
 - Failure model (bend vs retry).
 - Marque line: one hard fork vs sliding reputation.
-- Whether the sloop ALACRITY appears at all — perhaps as a loyal consort, a
-  rival, or the ship you refuse.
+- ~~Whether the sloop ALACRITY appears at all~~ — RESOLVED: she opens act
+  III as the free captain's first ship; the schooner is earned mid-act.
