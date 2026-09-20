@@ -85,3 +85,16 @@ signal Bryan relies on. Worth writing the line before starting, not after.
   What is verified is that the game is unaffected when registration fails. Wants
   a check on iOS Safari, and the Cloudflare cache rule is still worth doing.
   (worktree: ../Sails-of-Combat-infra-cache-skew, branch agent/infra-cache-skew)
+- [data-cutter-jobs] DONE three act-II cutter jobs for the ADDER, each built
+  round one idea the other levels do not use: The Boats Come Out (a duel
+  outnumbered three to one by small craft — beat them in detail, because the
+  wind is the only thing that decides how many of them bear on you at once),
+  Touch and Go (a chase across a sandbank against a cutter of exactly your
+  speed, where carrying sail over the ground is the only way to gain and also
+  the way to run yourself aground) and A Lee Shore (no enemy at all: embayed in
+  a northerly gale with the beach to leeward, fetch the wreck on the bank and
+  then claw out to the offing before the clock runs out). Two new charts in
+  src/data/maps.js — Salt Kettle Bight and The Bonefish Flats — and nothing
+  under src/core/ touched. Balance over 100 runs: boats 49%, touchandgo 66%,
+  leeshore 66%, with every existing level's row unmoved.
+  (worktree: ../Sails-of-Combat-data-cutter-jobs, branch agent/data-cutter-jobs)

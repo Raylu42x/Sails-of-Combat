@@ -23,6 +23,9 @@ import banks from './banks.js';
 import cays from './cays.js';
 import cutout from './cutout.js';
 import purse from './purse.js';
+import boats from './boats.js';
+import touchandgo from './touchandgo.js';
+import leeshore from './leeshore.js';
 import squall from './squall.js';
 import ratrun from './ratrun.js';
 
@@ -36,6 +39,9 @@ export const SCENARIOS = [
   cays,
   cutout,
   purse,
+  boats,
+  touchandgo,
+  leeshore,
   squall,
   ratrun,
 ];

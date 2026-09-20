@@ -18,6 +18,9 @@ export const WIND_SPEEDS = {
 // Small helper so island shapes stay readable below.
 const blob = (q, r, height, cells) => cells.map(([dq, dr]) => ({ q: q + dq, r: r + dr, height }));
 const water = (depth, cells) => cells.map(([q, r]) => ({ q, r, depth }));
+// A shoreline is not a blob — it wanders. Listing its cells outright keeps the
+// shape of a coast readable where a blob would not.
+const coast = (height, cells) => cells.map(([q, r]) => ({ q, r, height }));
 
 export const MAPS = {
   openSea: {
@@ -75,6 +78,40 @@ export const MAPS = {
     cols: 10, rows: 11, scroll: true,
     wind: { from: 2, speed: 2, shiftEvery: 4 },
     islands: [], water: [],
+  },
+  // A bight open to the north, with the beach across the foot of it and a bank
+  // strung between the two headlands. In a northerly gale everything in here is
+  // to leeward of everything else, which is the whole difficulty.
+  bight: {
+    id: 'bight', name: 'Salt Kettle Bight',
+    cols: 11, rows: 12, scroll: false,
+    wind: { from: 0, speed: 3, shiftEvery: 3 },
+    islands: [
+      // The two headlands that make the bight, north to south.
+      ...coast('low', [[0, 5], [1, 5], [0, 6], [1, 6], [1, 7]]),
+      ...coast('low', [[9, 1], [10, 0], [9, 2], [10, 1], [9, 3]]),
+      // The beach across the foot of it. Nothing claws off this.
+      ...coast('low', [[1, 10], [2, 9], [3, 9], [4, 8], [5, 8], [6, 7], [7, 7], [8, 6], [9, 6]]),
+      ...coast('low', [[0, 11], [1, 11], [2, 10], [3, 10], [4, 9], [5, 9], [6, 8], [7, 8], [8, 7], [9, 7], [10, 6]]),
+    ],
+    water: [
+      // Outlying heads off each point, then the bank across the head of the bight.
+      ...water('shoal', [[2, 2], [8, -1], [2, 6], [8, 3], [2, 7], [3, 7], [7, 5], [8, 4]]),
+      ...water('shoal', [[3, 8], [4, 7], [5, 7], [6, 6], [7, 6]]),
+    ],
+  },
+  // Ten miles of sand a fathom under the keel, with a dry cay in the middle of
+  // it and a gut at either end. The short way across is over the ground.
+  flats: {
+    id: 'flats', name: 'The Bonefish Flats',
+    cols: 12, rows: 11, scroll: false,
+    wind: { from: 3, speed: 2, shiftEvery: 4 },
+    islands: [...coast('low', [[5, 2], [5, 3]])],
+    water: [
+      // The bank, west half and east half, with the guts left deep.
+      ...water('shoal', [[0, 4], [2, 3], [3, 3], [4, 2], [0, 5], [2, 4], [3, 4], [4, 3]]),
+      ...water('shoal', [[6, 1], [7, 1], [8, 0], [9, 0], [11, -1], [6, 2], [7, 2], [8, 1], [9, 1], [11, 0]]),
+    ],
   },
   gale: {
     id: 'gale', name: 'Mona Gale',
