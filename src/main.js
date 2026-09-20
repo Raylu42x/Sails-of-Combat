@@ -8,6 +8,7 @@ import { createReference } from './ui/reference.js';
 import { watchForUpdates } from './ui/updates.js';
 import { decodeReplay, runReplay } from './core/replay.js';
 import { createLayers } from './ui/layers.js';
+import { createZoom } from './ui/zoom.js';
 import { sfx } from './audio/sfx.js';
 
 const canvas = document.getElementById('sea');
@@ -27,6 +28,7 @@ const view = {
 const game = createGame(view);
 const layers = createLayers(box, () => renderer.draw());
 renderer = createRenderer(canvas, box, game, layers);
+const zoom = createZoom(box, canvas, renderer.layout, game, () => renderer.draw());
 
 const logView = createLog(document.getElementById('log'));
 const hud = createHud(document.getElementById('ships'), document.getElementById('turnLabel'), game);
@@ -74,7 +76,10 @@ game.on('reset', ctx => {
   logView.clear();
   renderer.clearMemory();
   hud.build(ctx);
+  // A new chart opens fitted, whatever the last one was zoomed to.
+  renderer.layout.fit();
   renderer.resize();
+  zoom.refresh();
 });
 game.on('change', refresh);
 game.on('busy', busy => { execBtn.disabled = busy || game.state().over; });
@@ -181,6 +186,9 @@ window.addEventListener('keydown', ev => {
     case '?': case '/': reference.toggle(); break;
     case 'd': case 'D': layers.toggle('depth'); break;
     case 'g': case 'G': layers.toggle('arcs'); break;
+    case '+': case '=': zoom.zoomIn(); break;
+    case '-': case '_': zoom.zoomOut(); break;
+    case '0': zoom.fit(); break;
     default:
       if (SHOT_KEYS[ev.key]) game.setOrder('shot', SHOT_KEYS[ev.key]);
       else handled = false;

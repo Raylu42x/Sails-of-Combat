@@ -38,6 +38,10 @@ gun arcs, your track for this turn, and the range line — and remembers what yo
 chose. Open water has no soundings to show, and the menu says so rather than
 leaving you wondering.
 
+**Zoom** — pinch the chart, scroll on it, or use the **+** / **−** buttons in
+its corner; drag to move about when you are in close; **⌖** (or `0`) fits the
+whole chart again. A new level always opens fitted.
+
 Things worth knowing:
 
 - **Guns miss.** There were no sights and no fire control: a crew laid by eye

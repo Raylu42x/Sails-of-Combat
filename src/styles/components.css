@@ -333,3 +333,18 @@
   border: 1px solid var(--brass); background: var(--brass); color: var(--sea);
 }
 .update-bar button.quiet { background: transparent; color: var(--ink-dim); border-color: var(--chart); }
+
+/* --- chart zoom, bottom right of the chart --- */
+.zoom {
+  position: absolute; right: 6px; bottom: 6px; z-index: 3;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.zoom button {
+  width: 32px; height: 32px; padding: 0; line-height: 1; cursor: pointer;
+  font-family: "Barlow Condensed", sans-serif; font-size: 18px; font-weight: 700;
+  border: 1px solid var(--chart); background: rgba(16,36,47,0.85); color: var(--ink-dim);
+}
+.zoom button:hover { color: var(--brass); border-color: var(--brass); }
+.zoom button:disabled { opacity: 0.35; cursor: default; }
+.zoom button[hidden] { display: none; }
+.zoom button:focus-visible { outline: 2px solid var(--flash); outline-offset: 1px; }
