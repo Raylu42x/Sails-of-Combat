@@ -32,27 +32,27 @@
     <div class="orders" id="ordersNormal">
       <div class="orow"><span class="lbl">Helm</span>
         <div class="seg" id="segHelm">
-          <button data-v="-2">⟲⟲</button><button data-v="-1">⟲</button><button data-v="0" class="on">—</button><button data-v="1">⟳</button><button data-v="2">⟳⟳</button>
+          <button data-v="-2" data-ic="helm-port-2" title="Two points to port" aria-label="Two points to port"><span class="cap">Port 2</span></button><button data-v="-1" data-ic="helm-port-1" title="One point to port" aria-label="One point to port"><span class="cap">Port</span></button><button data-v="0" data-ic="helm-steady" class="on" title="Steady as she goes" aria-label="Steady as she goes"><span class="cap">Steady</span></button><button data-v="1" data-ic="helm-stbd-1" title="One point to starboard" aria-label="One point to starboard"><span class="cap">Stbd</span></button><button data-v="2" data-ic="helm-stbd-2" title="Two points to starboard" aria-label="Two points to starboard"><span class="cap">Stbd 2</span></button>
         </div>
       </div>
       <div class="orow"><span class="lbl">Sails</span>
         <div class="seg" id="segSails">
-          <button data-v="full">Full</button><button data-v="battle" class="on">Battle</button><button data-v="takein">Take in</button>
+          <button data-v="full" data-ic="sail-full" title="Full sail: fastest, but the gun crews go aloft and the guns stay silent" aria-label="Full sail"><span class="cap">Full</span></button><button data-v="battle" data-ic="sail-battle" class="on" title="Battle sail: the fighting canvas" aria-label="Battle sail"><span class="cap">Battle</span></button><button data-v="takein" data-ic="sail-takein" title="Take in sail: slow, but the topmen repair rigging" aria-label="Take in sail"><span class="cap">Take in</span></button>
         </div>
       </div>
       <div class="orow"><span class="lbl">Guns</span>
         <div class="seg" id="segShot">
-          <button data-v="round" class="on"><span class="ic">●</span>Round</button><button data-v="chain"><span class="ic">∞</span>Chain</button><button data-v="grape"><span class="ic">∴</span>Grape</button><button data-v="double"><span class="ic">⦿</span>Double</button><button data-v="hold">Hold</button><button data-v="fireparty" id="firePartyBtn">Fire party</button>
+          <button data-v="round" data-ic="shot-round" class="on" title="Round shot: hulls her, and the splinters kill her people" aria-label="Round shot"><span class="cap">Round</span></button><button data-v="chain" data-ic="shot-chain" title="Chain shot: cuts her rigging so she cannot run" aria-label="Chain shot"><span class="cap">Chain</span></button><button data-v="grape" data-ic="shot-grape" title="Grape: sweeps her deck at close range" aria-label="Grape shot"><span class="cap">Grape</span></button><button data-v="double" data-ic="shot-double" title="Double shot: brutal, short-ranged, slow to reload" aria-label="Double shot"><span class="cap">Double</span></button><button data-v="hold" data-ic="shot-hold" title="Hold fire: keep what is in the barrels" aria-label="Hold fire"><span class="cap">Hold</span></button><button data-v="fireparty" data-ic="fire-party" id="firePartyBtn" title="Fire party: every hand to the buckets, no gunnery this turn" aria-label="Fire party"><span class="cap">Fire party</span></button>
         </div>
       </div>
       <div class="orow" id="cableRow"><span class="lbl">Cable</span>
         <div class="seg" id="segCable">
-          <button data-v="stand" class="on">Stand on</button><button data-v="letgo" id="anchorBtn">Let go anchor</button><button data-v="weigh" id="weighBtn">Weigh anchor</button>
+          <button data-v="stand" data-ic="cable-stand" class="on" title="Stand on under way" aria-label="Stand on"><span class="cap">Stand on</span></button><button data-v="letgo" data-ic="cable-letgo" id="anchorBtn" aria-label="Let go the anchor"><span class="cap">Let go</span></button><button data-v="weigh" data-ic="cable-weigh" id="weighBtn" aria-label="Weigh anchor"><span class="cap">Weigh</span></button>
         </div>
       </div>
       <div class="orow"><span class="lbl">Close</span>
         <div class="seg" id="segGrap">
-          <button data-v="no" class="on">Stand off</button><button data-v="yes" id="grapBtn">Grapple &amp; board</button><button data-v="prize" id="prizeBtn">Take possession</button>
+          <button data-v="no" data-ic="close-off" class="on" title="Stand off: no hooks this turn" aria-label="Stand off"><span class="cap">Stand off</span></button><button data-v="yes" data-ic="close-grapple" id="grapBtn" aria-label="Grapple and board"><span class="cap">Grapple</span></button><button data-v="prize" data-ic="close-prize" id="prizeBtn" aria-label="Take possession"><span class="cap">Possess</span></button>
         </div>
       </div>
     </div>
@@ -70,7 +70,7 @@
       </div>
       <div class="orow"><span class="lbl">Melee</span>
         <div class="seg" id="segMelee">
-          <button data-v="press" class="on" title="Everyone over the side: gains ground fastest, and pays the heaviest butcher's bill">All hands</button><button data-v="boarders" title="The boarding party alone: steadier going, far cheaper in men">Boarders</button><button data-v="hold" title="Hold the rail: the strongest posture there is, but it gains no ground">Repel</button><button data-v="back" title="Cut the lashings and sheer off — easier while you are winning the deck">Cut free</button>
+          <button data-v="press" data-ic="melee-press" class="on" title="Everyone over the side: gains ground fastest, and pays the heaviest butcher's bill" aria-label="All hands"><span class="cap">All hands</span></button><button data-v="boarders" data-ic="melee-boarders" title="The boarding party alone: steadier going, far cheaper in men" aria-label="Boarders"><span class="cap">Boarders</span></button><button data-v="hold" data-ic="melee-hold" title="Hold the rail: the strongest posture there is, but it gains no ground" aria-label="Repel boarders"><span class="cap">Repel</span></button><button data-v="back" data-ic="melee-back" title="Cut the lashings and sheer off — easier while you are winning the deck" aria-label="Cut free"><span class="cap">Cut free</span></button>
         </div>
       </div>
     </div>
@@ -80,7 +80,7 @@
     <div class="execrow">
       <button id="exec">Make it so</button>
       <button id="endAction" hidden>End action</button>
-      <button id="restart">Levels</button>
+      <button id="restart" data-ic="levels" title="Levels (L)" aria-label="Levels"><span class="cap">Levels</span></button>
       <button id="mute" class="icon-btn" title="Sound on or off" aria-label="Sound on or off">♪</button>
       <button id="help" class="icon-btn" title="What the orders mean (?)" aria-label="Reference card">?</button>
     </div>

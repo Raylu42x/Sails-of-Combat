@@ -56,7 +56,10 @@ h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.14em; text-
 
 @media (min-width: 1100px) {
   .wrap { grid-template-columns: minmax(0, 1.5fr) 380px; }
-  .seg button { font-size: 14px; padding: 10px 0; }
+  /* Heavier selectors than components.css's base rule, which loads later. */
+  .orders .seg button { min-height: 48px; }
+  .orders .seg button .ic svg { width: 22px; height: 22px; }
+  .orders .seg button .cap { font-size: 10px; }
 }
 
 /* Small screens: the chart is the game. Everything else gets compact so the
@@ -77,7 +80,14 @@ h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.14em; text-
   .hint { font-size: 10px; min-height: 2.4em; }
   .orow .lbl { width: 30px; font-size: 9px; }
   .seg { gap: 2px; }
-  .seg button { font-size: 11px; padding: 6px 0; min-height: 30px; }
+  /* The chart is the game, so the order rows stay as short as they were:
+     icon and caption side by side rather than stacked. */
+  .orders .seg button { flex-direction: row; gap: 4px; padding: 3px 2px; min-height: 32px; }
+  .orders .seg button .ic svg { width: 16px; height: 16px; }
+  .orders .seg button .cap { font-size: 7.5px; letter-spacing: 0.06em; }
+  #restart { flex-direction: row; gap: 4px; }
+  #restart .ic svg { width: 15px; height: 15px; }
+  #restart .cap { font-size: 7.5px; }
   #exec { font-size: 14px; padding: 9px 0; }
   .log { height: 46px; font-size: 10px; padding: 3px 6px; }
 }
@@ -86,6 +96,7 @@ h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.14em; text-
 @media (max-height: 480px) and (orientation: landscape) {
   h1 { font-size: 17px; }
   .log { height: 44px; }
-  .seg button { padding: 6px 0; font-size: 12px; }
+  .orders .seg button { padding: 3px 0 2px; min-height: 34px; }
+  .orders .seg button .ic svg { width: 15px; height: 15px; }
   #exec { padding: 8px 0; }
 }

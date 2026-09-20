@@ -2,6 +2,7 @@ import { dist } from '../core/hex.js';
 import { ATT_NAMES, attOf } from '../core/wind.js';
 import { isLoaded, madeFast, mountsOf, shortHanded, simFacing, speedOf } from '../core/ship.js';
 import { acceptsShot, drawTurns, grappleOdds, leeSide, momentumText, swivelsReady, wouldDraw } from '../core/combat.js';
+import { applyIcons } from './icons.js';
 
 const SHOT_TAG = { round: 'rnd', chain: 'chn', grape: 'grp', double: 'dbl' };
 // A glyph per charge: a ball, two balls linked by a bar, a scatter of small
@@ -12,6 +13,7 @@ export const SHOT_ICON = { round: '●', chain: '∞', grape: '∴', double: '�
 // Wires the order segments, keeps them honest about what this ship can do,
 // and writes the one-line forecast under the chart.
 export function createOrders(root, hintEl, game, onChange) {
+  applyIcons(root);
   const segs = [
     ['segHelm', 'helm'], ['segSails', 'sails'], ['segShot', 'shot'],
     ['segGrap', 'grapple'], ['segMelee', 'melee'], ['segCable', 'cable'],
