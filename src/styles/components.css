@@ -39,10 +39,15 @@
 .seg { flex: 1; display: flex; gap: 3px; }
 .seg button {
   flex: 1; font-size: var(--ui-md); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
-  padding: 8px 0; border: 1px solid var(--chart);
+  padding: 5px 0 4px; border: 1px solid var(--chart);
   background: transparent; color: var(--ink-dim); cursor: pointer;
-  min-height: 34px;
+  min-height: 42px;
+  /* Picture over word: the icon is the control, the caption confirms it. */
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
 }
+.seg button .ic { display: block; line-height: 0; }
+.seg button .ic svg { width: 19px; height: 19px; display: block; }
+.seg button .cap { font-size: 8.5px; letter-spacing: 0.1em; line-height: 1; white-space: nowrap; }
 .seg button.on { border-color: var(--brass); color: var(--brass); background: rgba(217,164,65,0.10); }
 .seg button:disabled { opacity: 0.3; cursor: default; }
 .seg button:focus-visible { outline: 2px solid var(--flash); outline-offset: 1px; }
@@ -51,7 +56,13 @@
 .execrow button { font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
 #exec { flex: 2.6; font-size: var(--ui-lg); padding: 11px 0; border: 1px solid var(--brass); background: var(--brass); color: var(--sea); }
 #exec:disabled { opacity: 0.4; }
-#restart { flex: 1; font-size: var(--ui-md); border: 1px solid var(--chart); background: transparent; color: var(--ink-dim); }
+#restart {
+  flex: 1; font-size: var(--ui-md); border: 1px solid var(--chart); background: transparent; color: var(--ink-dim);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 0 3px;
+}
+#restart .ic { line-height: 0; }
+#restart .ic svg { width: 18px; height: 18px; display: block; }
+#restart .cap { font-size: 8.5px; letter-spacing: 0.1em; line-height: 1; }
 
 /* --- log --- */
 .log {
@@ -176,9 +187,6 @@
 }
 .layers-note:empty { display: none; }
 
-/* Charge glyphs on the shot buttons: a ball, two linked, a scatter, a double. */
-.seg button .ic { margin-right: 4px; opacity: 0.85; font-size: 11px; }
-@media (max-width: 480px) { .seg button .ic { margin-right: 2px; } }
 
 /* The full action, on a tap. */
 .logfull {

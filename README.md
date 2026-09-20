@@ -30,6 +30,10 @@ Each turn you set four orders and press **Make it so**:
 | **Cable** | Let go the anchor where the lead finds bottom, or weigh it again — which costs a whole turn. |
 | **Close** | Grapple and board when you are alongside. Then choose how much of the crew to commit: *all hands*, the *boarding party* alone, *repel* on the defensive, or *cut free*. |
 
+The order buttons are icons with a small caption under each — a thumb reads a
+sail shape faster than a word. Hover (or long-press) for what one does, or open
+the **?** card.
+
 Keyboard: arrows for helm and sail, 1–5 for shot, space to give the order,
 **L** for levels, **M** for sound, **D** for soundings, **G** for gun arcs.
 
