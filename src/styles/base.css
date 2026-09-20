@@ -1,17 +1,21 @@
-/* Committed single-theme: night gunnery chart. Painted explicitly so it holds
-   on any host ground — no light-mode variant by design. */
+/* Committed single-theme: a night gunnery chart, but the water is the sea and
+   not the page. The page ground (--deck) is the dark thing; the chart itself
+   is painted in a real ocean blue so that on a phone, where the chart is most
+   of the screen, the eye reads "water" before it reads "grid". Painted
+   explicitly so it holds on any host ground — no light-mode variant by design. */
 :root {
-  --sea: #0D2940;
-  --panel: #11293A;
-  --chart: #21496B;
-  --chart-dim: #17374F;
-  /* Water gets colder and darker as it deepens; land is warm against it, so
+  --deck: #0A1C2C;
+  --sea: #123F6B;
+  --panel: #0F2A40;
+  --chart: #2E6E9E;
+  --chart-dim: #1F578A;
+  /* Water gets warmer and paler as it shoals; land is warm against it, so
      the eye reads coast, bank and open sea apart at a glance. */
-  --sea-shallow: #14425A;
+  --sea-shallow: #1E6E93;
   --land: #3A4436;
-  --land-shore: #4A5340;
-  --shoal: #3C6A72;
-  --anchorage: rgba(60, 106, 114, 0.18);
+  --land-shore: #55604A;
+  --shoal: #6CC3CB;
+  --anchorage: rgba(108, 195, 203, 0.18);
   --land-tall: #56603F;
   --ink: #D8E4E8;
   --ink-dim: #7E97A2;
@@ -28,7 +32,7 @@
 
 html, body {
   margin: 0; padding: 0; height: 100%;
-  background: var(--sea);
+  background: var(--deck);
   color: var(--ink);
   font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
   touch-action: manipulation;
